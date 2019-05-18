@@ -1,0 +1,50 @@
+# Clock
+set_io ice_clk 35
+# SPI Flash
+set_io ice_ss 16
+set_io ice_sck 15
+set_io ice_si 17
+set_io ice_so 14
+# IO Bank0
+set_io iot_37a 23
+set_io iot_36b 25
+set_io iot_39a 26
+set_io iot_38b 27
+set_io iot_43a 23
+set_io iot_42b 31
+set_io iot_45a_g1 37
+set_io iot_44b 34
+set_io iot_49a 43
+set_io iot_48b 36
+set_io iot_51a 42
+set_io iot_50b 38
+set_io iot_41a 28
+set_io rgb0 39
+set_io rgb1 40
+set_io rgb2 41
+# set_io iot_46b_g0 35 # used as ICE_CLK
+# IO Bank1
+# set_io iob_35b_spi_ss 16
+# set_io iob_34a_spi_sck 15
+# set_io iob_33b_spi_si 17
+# set_io iob_32a_spi_so 14
+set_io iob_22a 12
+set_io iob_23b 21
+set_io iob_24a 13
+set_io iob_25b_g3 20
+set_io iob_29b 19
+set_io iob_31b 18
+set_io iob_20a 11
+set_io iob_18a 10
+set_io iob_16a 9
+set_io iob_13b 6
+# IO Bank2
+set_io iob_8a 4
+set_io iob_9b 3
+set_io iob_4a 48
+set_io iob_5b 45
+set_io iob_4a 48
+set_io iob_2a 47
+set_io iob_3b_g6 44
+set_io iob_0a 46
+set_io iob_6a 2
