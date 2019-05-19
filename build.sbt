@@ -11,7 +11,7 @@ lazy val pqvexriscv = (project in file("."))
     outputStrategy := Some(StdoutOutput),
   ).dependsOn(vexRiscv)
 
-lazy val vexRiscv = RootProject(uri("git://github.com/SpinalHDL/VexRiscv#abb7bd99ab4d113169b441343a13b10fdfdad413"))
+lazy val vexRiscv = RootProject(uri("git://github.com/SpinalHDL/VexRiscv#f249bbc60a0a62da564d943f7a5dc88c1b1b6641"))
 
 fork := true
 

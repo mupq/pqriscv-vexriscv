@@ -1,6 +1,7 @@
-TARGETS = PQVexRiscvUP5K
+TARGETS ?= PQVexRiscvUP5K PQVexRiscvIcoboard
 
-DEVICE ?= up5k
+PQVexRiscvUP5K_DEVICE ?= up5k
+PQVexRiscvIcoboard_DEVICE ?= hx8k
 
 YOSYS = yosys
 NEXTPNR = nextpnr-ice40
@@ -11,17 +12,17 @@ TARGET_FREQ = 12
 
 all: $(addsuffix .time,$(TARGETS)) $(addsuffix .bin,$(TARGETS))
 
-%.v: ../build.sbt $(shell find ../src -name "*.scala")
-	cd ../;	sbt "runMain mupq.$(basename $@)"
+# %.v: ../build.sbt $(shell find ../src -name "*.scala")
+# 	cd ../;	sbt "runMain mupq.$(basename $@)"
 
 %.json: %.v
 	$(YOSYS) -q -p "synth_ice40 -top $(basename $<) -json $@" $<
 
 %.asc: %.json %.pcf
-	$(NEXTPNR) --up5k --json $< --pcf $(filter %.pcf,$^) --asc $@ --opt-timing
+	$(NEXTPNR) --$($(basename $<)_DEVICE) --json $< --pcf $(filter %.pcf,$^) --asc $@ --opt-timing
 
 %.time: %.asc
-	$(ICETIME) -tmd $(DEVICE) $< | tee $@
+	$(ICETIME) -tmd $($(basename $<)_DEVICE) $< | tee $@
 
 %.bin: %.asc
 	$(ICEPACK) $< $@
