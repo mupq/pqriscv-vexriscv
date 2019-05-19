@@ -201,7 +201,7 @@ object PQVexRiscv
         catchAccessFault = false,
         earlyInjection = false
       ),
-      new CsrPlugin(CsrPluginConfig.smallest(0x80000000l).copy(mtvecAccess = CsrAccess.READ_WRITE)),
+      new CsrPlugin(CsrPluginConfig.smallest(0x80000000l).copy(mtvecAccess = CsrAccess.READ_WRITE, mcycleAccess = CsrAccess.READ_ONLY)),
       new DecoderSimplePlugin(
         catchIllegalInstruction = false
       ),
@@ -215,6 +215,7 @@ object PQVexRiscv
         executeInsertion = false
       ),
       new FullBarrelShifterPlugin,
+      new MulDivIterativePlugin(true, true, 1, 1),
       new HazardSimplePlugin(
         bypassExecute = true,
         bypassMemory = true,
