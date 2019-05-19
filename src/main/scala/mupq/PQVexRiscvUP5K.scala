@@ -15,7 +15,7 @@ class PipelinedMemoryBusSPRAM(busConfig: PipelinedMemoryBusConfig) extends Compo
   }
 
   /* Tie together two RAMS to get 32-bit width */
-  val rams: Array[Ice40SPRAM] = (0 to 2).map(_ => new Ice40SPRAM).toArray
+  val rams: Array[Ice40SPRAM] = (0 to 1).map(_ => new Ice40SPRAM).toArray
   val enable = io.bus.cmd.valid
   val mask = io.bus.cmd.mask
   /* Fan out the simple byte mask of the bus to bit masks */
