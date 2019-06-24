@@ -3,6 +3,9 @@ TARGETS ?= PQVexRiscvUP5K PQVexRiscvIcoboard
 PQVexRiscvUP5K_DEVICE ?= up5k
 PQVexRiscvIcoboard_DEVICE ?= hx8k
 
+PQVexRiscvUP5K_PACKAGE ?= sg48
+PQVexRiscvIcoboard_PACKAGE ?= ct256
+
 YOSYS = yosys
 NEXTPNR = nextpnr-ice40
 ICETIME = icetime
@@ -16,15 +19,18 @@ all: $(addsuffix .time,$(TARGETS)) $(addsuffix .bin,$(TARGETS))
 # 	cd ../;	sbt "runMain mupq.$(basename $@)"
 
 %.json: %.v
-	$(YOSYS) -q -p "synth_ice40 -top $(basename $<) -json $@" $<
+	$(YOSYS) -q -p "synth_ice40 -top $(basename $<) -json $@ -abc2" $<
 
 %.asc: %.json %.pcf
-	$(NEXTPNR) --$($(basename $<)_DEVICE) --json $< --pcf $(filter %.pcf,$^) --asc $@ --opt-timing
+	$(NEXTPNR) --$($(basename $<)_DEVICE) --package $($(basename $<)_PACKAGE) --json $< --pcf $(filter %.pcf,$^) --asc $@
 
 %.time: %.asc
 	$(ICETIME) -tmd $($(basename $<)_DEVICE) $< | tee $@
 
 %.bin: %.asc
 	$(ICEPACK) $< $@
+
+clean:
+	rm *.asc *.bin *.json
 
 .SECONDARY:
