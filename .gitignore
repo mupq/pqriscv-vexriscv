@@ -1,0 +1,3 @@
+target/
+rtl/*.json
+rtl/*.bin

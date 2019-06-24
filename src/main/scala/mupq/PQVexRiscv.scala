@@ -1,18 +1,19 @@
 package mupq
 
+import scala.collection.mutable.ArrayBuffer
+
 import spinal.core._
 import spinal.lib._
-import spinal.lib.com.jtag._
-import spinal.lib.com.uart._
-import spinal.lib.io._
 import spinal.lib.bus.amba3.apb._
 import spinal.lib.bus.misc._
 import spinal.lib.bus.simple._
-import scala.collection.mutable.ArrayBuffer
+import spinal.lib.io._
+import spinal.lib.com.jtag._
+import spinal.lib.com.uart._
 
 import vexriscv._
-import vexriscv.plugin._
 import vexriscv.demo.MuraxApb3Timer
+import vexriscv.plugin._
 
 abstract class PQVexRiscv(
   cpuPlugins : Seq[Plugin[VexRiscv]],
