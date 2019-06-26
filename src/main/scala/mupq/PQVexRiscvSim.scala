@@ -1,6 +1,6 @@
 package mupq
 
-import java.io.{File, FileOutputStream, IOException, OutputStream}
+import java.io.{File, FileInputStream, FileOutputStream, IOException, OutputStream}
 
 import scopt.OptionParser
 
@@ -16,7 +16,7 @@ import spinal.lib.com.jtag.Jtag
 import spinal.lib.com.uart.Uart
 import spinal.lib.com.jtag.sim.JtagTcp
 
-case class PipelinedMemoryBusRam(size : BigInt) extends Component{
+case class PipelinedMemoryBusRam(size : BigInt, initialContent : File = null) extends Component{
   require(size % 4 == 0, "Size must be multiple of 4 bytes")
   require(size > 0, "Size must be greater than zero")
   val busConfig = PipelinedMemoryBusConfig(log2Up(size), 32)
@@ -34,6 +34,18 @@ case class PipelinedMemoryBusRam(size : BigInt) extends Component{
     mask  = io.bus.cmd.mask
   )
   io.bus.cmd.ready := True
+
+  if (initialContent != null) {
+    val input = new FileInputStream(initialContent)
+    val initContent = Array.fill[BigInt](ram.wordCount)(0)
+    val fileContent = Array.ofDim[Byte](Seq(input.available, initContent.length * 4).min)
+    input.read(fileContent)
+    for ((byte, addr) <- fileContent.zipWithIndex) {
+      val l = java.lang.Byte.toUnsignedLong(byte) << ((addr & 3) * 8)
+      initContent(addr >> 2) |= BigInt(l)
+    }
+    ram.initBigInt(initContent)
+  }
 }
 
 
@@ -41,10 +53,11 @@ case class PipelinedMemoryBusRam(size : BigInt) extends Component{
 
 class PQVexRiscvSim(
   val ramBlockSizes : Seq[BigInt] = Seq[BigInt](256 KiB, 128 KiB),
+  val initialContent : File = null,
   val coreFrequency : HertzNumber = 12 MHz
 ) extends PQVexRiscv(
   cpuPlugins = PQVexRiscv.defaultPlugins,
-  ibusRange = SizeMapping(0x80000000l, (256 + 128) KiB)
+  ibusRange = SizeMapping(0x80000000l, ramBlockSizes.reduce(_ + _))
 ) {
   val io = new Bundle {
     val asyncReset = in Bool
@@ -60,7 +73,7 @@ class PQVexRiscvSim(
   jtag <> io.jtag
 
   val memory = new ClockingArea(systemClockDomain) {
-    val ramBlocks = ramBlockSizes.map(PipelinedMemoryBusRam(_))
+    val ramBlocks = ramBlockSizes.zipWithIndex.map(t => PipelinedMemoryBusRam(t._1, if (t._2 == 0) initialContent else null))
     var curAddr : BigInt = 0x80000000l
     for (block <- ramBlocks) {
       busSlaves += block.io.bus -> SizeMapping(curAddr, block.size)
@@ -74,11 +87,14 @@ object PQVexRiscvSim {
   def main(args: Array[String]) = {
     case class PQVexRiscvSimConfig(
       uartOutFile: OutputStream = System.out,
-      ramBlocks: Seq[BigInt] = Seq(256, 128)
+      initFile: File = null,
+      ramBlocks: Seq[BigInt] = Seq(256 KiB, 128 KiB)
     )
     val optParser = new OptionParser[PQVexRiscvSimConfig]("PQVexRiscvSim") {
       head("PQVexRiscvSim simulator")
+      help("help") text("print usage text")
       opt[File]("uart") action((f, c) => c.copy(uartOutFile = new FileOutputStream(f, true))) text("File for UART output (will be appended)") valueName("<output>")
+      opt[File]("init") action((f, c) => c.copy(initFile = f)) text("Initialization file for first RAM block") valueName("<bin>")
       opt[Seq[Int]]("ram") action((r, c) => c.copy(ramBlocks = r.map(_ KiB))) text("SRAM Blocks in KiB") valueName("<block1>,<block2>")
     }
 
@@ -88,14 +104,14 @@ object PQVexRiscvSim {
     }
 
     val compiled = SimConfig.allOptimisation.compile {
-      new PQVexRiscvSim(config.ramBlocks)
+      new PQVexRiscvSim(config.ramBlocks, config.initFile)
     }
 
     compiled.doSim("PqVexRiscvSim", 42) { dut =>
-      val mainClkPeriod = (1e12 / (12 MHz).toDouble).toLong
+      val mainClkPeriod = (1e12 / dut.coreFrequency.toDouble).toLong
       val jtagClkPeriod = mainClkPeriod * 4
       val uartBaudRate = 115200
-      val uartBaudPeriod = (1e12 / uartBaudRate).toLong
+      val uartBaudPeriod = (1e12 / uartBaudRate.toDouble).toLong
 
       val clockDomain = ClockDomain(dut.io.mainClock, dut.io.asyncReset)
       clockDomain.forkStimulus(mainClkPeriod)
