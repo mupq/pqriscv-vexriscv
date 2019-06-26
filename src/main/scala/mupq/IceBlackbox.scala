@@ -44,7 +44,7 @@ class Ice40PLL2FCore(
     val DIVF = B(divF, 7 bits)
     val DIVR = B(divR, 4 bits)
     val DIVQ = B(divQ, 3 bits)
-    val FILTER_RANGE = B(0x2, 3 bits)
+    val FILTER_RANGE = B(0x7, 3 bits)
   }
   val io = new Bundle {
     val RESETB = in Bool
