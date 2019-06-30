@@ -188,7 +188,7 @@ abstract class PQVexRiscv(
 
 object PQVexRiscv
 {
-  def defaultPlugins = Seq(
+  def defaultPlugins: Seq[Plugin[VexRiscv]] = Seq(
       new IBusSimplePlugin(
         resetVector = 0x80000000l,
         cmdForkOnSecondStage = true,
@@ -216,7 +216,8 @@ object PQVexRiscv
         executeInsertion = false
       ),
       new FullBarrelShifterPlugin,
-      new MulDivIterativePlugin(true, true, 1, 1),
+      new Mul16Plugin,
+      new MulDivIterativePlugin(false, true, 32, 1),
       new HazardSimplePlugin(
         bypassExecute = true,
         bypassMemory = true,

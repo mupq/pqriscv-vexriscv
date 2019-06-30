@@ -16,6 +16,9 @@ import spinal.lib.com.jtag.Jtag
 import spinal.lib.com.uart.Uart
 import spinal.lib.com.jtag.sim.JtagTcp
 
+import vexriscv.VexRiscv
+import vexriscv.plugin.Plugin
+
 case class PipelinedMemoryBusRam(size : BigInt, initialContent : File = null) extends Component{
   require(size % 4 == 0, "Size must be multiple of 4 bytes")
   require(size > 0, "Size must be greater than zero")
@@ -54,9 +57,10 @@ case class PipelinedMemoryBusRam(size : BigInt, initialContent : File = null) ex
 class PQVexRiscvSim(
   val ramBlockSizes : Seq[BigInt] = Seq[BigInt](256 KiB, 128 KiB),
   val initialContent : File = null,
-  val coreFrequency : HertzNumber = 12 MHz
+  val coreFrequency : HertzNumber = 12 MHz,
+  cpuPlugins : Seq[Plugin[VexRiscv]] = PQVexRiscv.defaultPlugins
 ) extends PQVexRiscv(
-  cpuPlugins = PQVexRiscv.defaultPlugins,
+  cpuPlugins = cpuPlugins,
   ibusRange = SizeMapping(0x80000000l, ramBlockSizes.reduce(_ + _))
 ) {
   val io = new Bundle {

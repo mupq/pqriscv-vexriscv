@@ -47,9 +47,10 @@ class PipelinedMemoryBusSPRAM(busConfig: PipelinedMemoryBusConfig) extends Compo
 }
 
 class PQVexRiscvUP5K(
-  val coreFrequency : HertzNumber = 12 MHz
+  val coreFrequency : HertzNumber = 12 MHz,
+  cpuPlugins : Seq[Plugin[VexRiscv]] = PQVexRiscv.defaultPlugins
 ) extends PQVexRiscv(
-  cpuPlugins = PQVexRiscv.defaultPlugins,
+  cpuPlugins = cpuPlugins, // .filter(!_.isInstanceOf[Mul16Plugin]) ++ Seq[Plugin[VexRiscv]](new Mul16Plugin(true)),
   ibusRange = SizeMapping(0x80000000l, 128 KiB)
 ) {
   val io = new Bundle {

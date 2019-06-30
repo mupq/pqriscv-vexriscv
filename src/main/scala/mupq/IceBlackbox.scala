@@ -101,3 +101,87 @@ class Ice40SPRAM extends BlackBox {
   mapClockDomain(clock = io.CLOCK)
   setBlackBoxName("SB_SPRAM256KA")
 }
+
+/**
+  * BlackBox Model for DSA
+  */
+class Ice40Multiplier(registerOutput : Boolean = false) extends BlackBox {
+  val generics = new Generic {
+    val A_REG = B"0"
+    val B_REG = B"0"
+    val C_REG = B"0"
+    val D_REG = B"0"
+    val TOP_8X8_MULT_REG = B"0"
+    val BOT_8X8_MULT_REG = B"0"
+    val PIPELINE_16X16_MULT_REG1 = B"0"
+    val PIPELINE_16X16_MULT_REG2 = if (registerOutput) B"1" else B"0"
+    val TOPOUTPUT_SELECT = B"11"
+    val TOPADDSUB_LOWERINPUT = B"00"
+    val TOPADDSUB_UPPERINPUT = B"0"
+    val TOPADDSUB_CARRYSELECT = B"00"
+    val BOTOUTPUT_SELECT = B"11"
+    val BOTADDSUB_LOWERINPUT = B"00"
+    val BOTADDSUB_UPPERINPUT = B"0"
+    val BOTADDSUB_CARRYSELECT = B"00"
+    val MODE_8X8 = B"0"
+    val A_SIGNED = B"0"
+    val B_SIGNED = B"0"
+  }
+
+  val io = new Bundle {
+    val CLK = in Bool
+    val CE = in Bool
+    val A = in Bits(16 bits)
+    val AHOLD = in Bool
+    val B = in Bits(16 bits)
+    val BHOLD = in Bool
+    val C = in Bits(16 bits)
+    val CHOLD = in Bool
+    val D = in Bits(16 bits)
+    val DHOLD = in Bool
+    val IRSTTOP = in Bool
+    val ORSTTOP = in Bool
+    val OLOADTOP = in Bool
+    val ADDSUBTOP = in Bool
+    val OHOLDTOP = in Bool
+    val O = out Bits(32 bits)
+    val IRSTBOT = in Bool
+    val ORSTBOT = in Bool
+    val OLOADBOT = in Bool
+    val ADDSUBBOT = in Bool
+    val OHOLDBOT = in Bool
+    val CI = in Bool
+    val CO = out Bool
+    val ACCUMCI = in Bool
+    val ACCUMCO = out Bool
+    val SIGNEXTIN = in Bool
+    val SIGNEXTOUT = out Bool
+  }
+  noIoPrefix()
+  mapCurrentClockDomain(io.CLK, enable = io.CE)
+  setBlackBoxName("SB_MAC16")
+
+  def assignDefaults = {
+    // io.A := B(0, 16 bits).allowOverride
+    // io.B := B(0, 16 bits).allowOverride
+    io.C := B(0, 16 bits)
+    io.D := B(0, 16 bits)
+    io.AHOLD := False
+    io.BHOLD := False
+    io.CHOLD := False
+    io.DHOLD := False
+    io.ADDSUBTOP := False
+    io.IRSTTOP := False
+    io.ORSTTOP := False
+    io.OHOLDTOP := False
+    io.OLOADTOP := False
+    io.ADDSUBBOT := False
+    io.IRSTBOT := False
+    io.ORSTBOT := False
+    io.OHOLDBOT := False
+    io.OLOADBOT := False
+    io.CI := False
+    io.ACCUMCI := False
+    io.SIGNEXTIN := False
+  }
+}
