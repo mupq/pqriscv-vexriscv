@@ -37,7 +37,7 @@ make -C rtl TARGETS=PQVexRiscvUP5K
 Simulating a VexRiscv core is also possible. 
 
 ```sh
-sbt "runMain mupq.PQVexRiscvUP5K --init initfile.bin --ram 256,128 --uart uartoutput.txt"
+sbt "runMain mupq.PQVexRiscvSim --init initfile.bin --ram 256,128 --uart uartoutput.txt"
 ```
 
 Adapt the options to your liking. The `--init` option points to a binary
