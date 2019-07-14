@@ -202,7 +202,7 @@ object PQVexRiscv
         catchAccessFault = false,
         earlyInjection = false
       ),
-      new CsrPlugin(CsrPluginConfig.smallest(0x80000000l).copy(mtvecAccess = CsrAccess.READ_WRITE, mcycleAccess = CsrAccess.READ_ONLY)),
+      new CsrPlugin(CsrPluginConfig.smallest(0x80000000l).copy(mtvecAccess = CsrAccess.READ_WRITE, mcycleAccess = CsrAccess.READ_ONLY, minstretAccess = CsrAccess.READ_ONLY)),
       new DecoderSimplePlugin(
         catchIllegalInstruction = false
       ),
