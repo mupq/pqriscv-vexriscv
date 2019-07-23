@@ -14,7 +14,7 @@ NEXTPNR = nextpnr-ice40
 ICETIME = icetime
 ICEPACK = icepack
 
-all: $(addsuffix .time,$(TARGETS)) $(addsuffix .bin,$(TARGETS))
+all: $(addsuffix .time,$(TARGETS)) $(addsuffix .bit,$(TARGETS))
 
 %.v: ../build.sbt $(shell find ../src -name "*.scala")
 	cd ../;	sbt "runMain mupq.$(basename $@)"
@@ -28,13 +28,13 @@ all: $(addsuffix .time,$(TARGETS)) $(addsuffix .bin,$(TARGETS))
 %.time: %.asc
 	$(ICETIME) -tmd $($(basename $<)_DEVICE) $< | tee $@
 
-%.bin: %.asc
+%.bit: %.asc
 	$(ICEPACK) $< $@
 
-PQVexRiscvArty.bin PQVexRiscvArty.time: PQVexRiscvArty.v
+PQVexRiscvArty.bit PQVexRiscvArty.time: PQVexRiscvArty.v
 	vivado -nojournal -log log.log -mode batch -source Arty-A7-fast.tcl
 
 clean:
-	rm *.asc *.bin *.json *.time
+	rm *.asc *.bit *.json *.time
 
 .SECONDARY:
