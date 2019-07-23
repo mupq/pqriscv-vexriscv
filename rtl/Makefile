@@ -33,6 +33,9 @@ all: $(addsuffix .time,$(TARGETS)) $(addsuffix .bin,$(TARGETS))
 %.bin: %.asc
 	$(ICEPACK) $< $@
 
+PQVexRiscvArty.bin:
+	vivado -nojournal -log log.log -mode batch -source Arty-A7-fast.tcl
+
 clean:
 	rm *.asc *.bin *.json
 
