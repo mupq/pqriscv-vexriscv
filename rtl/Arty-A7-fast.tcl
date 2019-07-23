@@ -2,6 +2,7 @@ set BUILD_DATE [ clock format [ clock seconds ] -format %m%d%Y ]
 set BUILD_TIME [ clock format [ clock seconds ] -format %H%M%S ]
 
 set PROJECT_NAME "PQVexRiscvArty"
+
 # Use output directory to keep it clean
 set OUTPUT_DIR "./$PROJECT_NAME"
 set PART_NUMBER "xc7a35ticsg324-1L"
@@ -65,6 +66,7 @@ write_checkpoint -force $OUTPUT_DIR/${PROJECT_NAME}_post_place_physopt.dcp
 # Route Design
 route_design -directive Explore
 report_timing_summary -file $OUTPUT_DIR/${PROJECT_NAME}_post_route_tim.rpt
+report_timing_summary -file ${PROJECT_NAME}.time
 report_utilization -hierarchical -file $OUTPUT_DIR/${PROJECT_NAME}_post_route_util.rpt
 report_route_status -file $OUTPUT_DIR/${PROJECT_NAME}_post_route_status.rpt
 report_io -file $OUTPUT_DIR/${PROJECT_NAME}_post_route_io.rpt
