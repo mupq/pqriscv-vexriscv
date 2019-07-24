@@ -69,7 +69,24 @@ prefix/datarootdir to your taste.
 
 ```sh
 ./bootstrap
-./configure --prefix=/usr/local --program-suffix=-vexriscv --datarootdir=/usr/local/share/vexriscv --enable-maintainer-mode --disable-werror --enable-ft232r --enable-ftdi --enable-jtag_vpi --disable-aice --disable-amtjtagaccel --disable-armjtagew --disable-assert --disable-at91rm9200 --disable-bcm2835gpio --disable-buspirate --disable-cmsis-dap --disable-doxygen-html --disable-doxygen-pdf --disable-dummy --disable-ep93xx --disable-gw16012 --disable-imx_gpio --disable-jlink --disable-kitprog --disable-minidriver-dummy --disable-oocd_trace --disable-opendous --disable-openjtag --disable-osbdm --disable-parport --disable-parport-giveio --disable-parport-ppdev --disable-presto --disable-remote-bitbang --disable-rlink --disable-stlink --disable-sysfsgpio --disable-ti-icdi --disable-ulink --disable-usb-blaster --disable-usb-blaster-2 --disable-usbprog --disable-verbose-jtag-io --disable-verbose-usb-comms --disable-verbose-usb-io --disable-vsllink --disable-xds110 --disable-zy1000 --disable-zy1000-master
+./configure --prefix=/usr/local --program-suffix=-vexriscv \
+  --datarootdir=/usr/local/share/vexriscv --enable-maintainer-mode \
+  --disable-werror --enable-ft232r --enable-ftdi --enable-jtag_vpi \
+  --disable-aice --disable-amtjtagaccel --disable-armjtagew \
+  --disable-assert --disable-at91rm9200 --disable-bcm2835gpio \
+  --disable-buspira --disable-cmsis-dap --disable-doxygen-html \
+  --disable-doxygen-pdf --disable-dummy --disable-ep93xx \
+  --disable-gw16012 --disable-imx_gpio --disable-jlink \
+  --disable-kitprog --disable-minidriver-dummy --disable-oocd_trace \
+  --disable-opendous --disable-openjtag --disable-osbdm \
+  --disable-parport --disable-parport-giveio --disable-parport-ppdev \
+  --disable-presto --disable-remote-bitbang --disable-rlink \
+  --disable-stlink --disable-sysfsgpio --disable-ti-icdi \
+  --disable-ulink --disable-usb-blaster --disable-usb-blaster-2 \
+  --disable-usbprog --disable-verbose-jtag-io \
+  --disable-verbose-usb-comms --disable-verbose-usb-io \
+  --disable-vsllink --disable-xds110 --disable-zy1000 \
+  --disable-zy1000-master
 make
 # sudo make install
 ```
