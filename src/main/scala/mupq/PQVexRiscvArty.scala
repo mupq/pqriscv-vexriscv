@@ -22,7 +22,7 @@ import vexriscv.plugin.Plugin
 class PQVexRiscvArty(
   val ramBlockSizes : Seq[BigInt] = Seq[BigInt](64 KiB, 64 KiB),
   val initialContent : File = null,
-  val coreFrequency : HertzNumber = 100 MHz,
+  val coreFrequency : HertzNumber = 50 MHz,
   cpuPlugins : Seq[Plugin[VexRiscv]] = PQVexRiscv.defaultPlugins
 ) extends PQVexRiscv(
   cpuPlugins = cpuPlugins,
@@ -42,8 +42,17 @@ class PQVexRiscvArty(
   }
   noIoPrefix()
 
-  asyncReset := !io.RST
-  mainClock := io.CLK
+  val pll = new XilinxPLLBase(100 MHz, Array(50 MHz))
+  pll.io.CLKIN1 := io.CLK
+  pll.io.RST := !io.RST
+  pll.io.CLKFBIN := pll.io.CLKFBOUT
+  pll.io.PWRDWN := False
+
+  val bufg = new XilinxGlobalBuffer()
+  bufg.io.I := pll.io.CLKOUT0
+
+  asyncReset := !io.RST && !pll.io.LOCKED
+  mainClock := bufg.io.O
 
   io.TDO := jtag.tdo
   jtag.tck := io.TCK
