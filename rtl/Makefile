@@ -36,6 +36,10 @@ PQVexRiscvArtyA7.v: ../build.sbt $(shell find ../src -name "*.scala")
 	cd ../;	sbt "runMain mupq.$(basename $@)"
 	mv PQVexRiscvArty.v $@
 
+PQVexRiscvArtyS7.v: ../build.sbt $(shell find ../src -name "*.scala")
+	cd ../;	sbt "runMain mupq.$(basename $@) --ram 192,64"
+	mv PQVexRiscvArty.v $@
+
 PQVexRiscvArtyA7.bit PQVexRiscvArtyA7.time: PQVexRiscvArty.v PQVexRiscvArtyA7.tcl synth.tcl
 	vivado -nojournal -mode batch -source synth.tcl -tclargs -board PQVexRiscvArtyA7 -fast
 
