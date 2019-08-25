@@ -37,7 +37,7 @@ PQVexRiscvArtyA7.v: ../build.sbt $(shell find ../src -name "*.scala")
 	mv PQVexRiscvArty.v $@
 
 PQVexRiscvArtyS7.v: ../build.sbt $(shell find ../src -name "*.scala")
-	cd ../;	sbt "runMain mupq.PQVexRiscvArty --ram 128,64"
+	cd ../;	sbt "runMain mupq.PQVexRiscvArty --ram 128,64 --clk 12 --core 12"
 	mv PQVexRiscvArty.v $@
 
 PQVexRiscvArtyA7.bit PQVexRiscvArtyA7.time: PQVexRiscvArtyA7.v PQVexRiscvArtyA7.tcl synth.tcl

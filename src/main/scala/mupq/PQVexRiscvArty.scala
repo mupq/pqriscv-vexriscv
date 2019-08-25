@@ -21,10 +21,10 @@ import vexriscv.plugin.Plugin
 
 class PQVexRiscvArty(
   val ramBlockSizes : Seq[BigInt] = Seq[BigInt](64 KiB, 64 KiB),
-  val initialContent : File = null,
+  val clkFrequency : HertzNumber = 100 MHz,
   val coreFrequency : HertzNumber = 50 MHz,
   cpuPlugins : Seq[Plugin[VexRiscv]] = PQVexRiscv.defaultPlugins
-) extends PQVexRiscv(
+) extends PQVexRiscv (
   cpuPlugins = cpuPlugins,
   ibusRange = SizeMapping(0x80000000l, ramBlockSizes.reduce(_ + _))
 ) {
@@ -42,17 +42,22 @@ class PQVexRiscvArty(
   }
   noIoPrefix()
 
-  val pll = new XilinxPLLBase(100 MHz, Array(50 MHz))
-  pll.io.CLKIN1 := io.CLK
-  pll.io.RST := !io.RST
-  pll.io.CLKFBIN := pll.io.CLKFBOUT
-  pll.io.PWRDWN := False
+  if (clkFrequency == coreFrequency) {
+    asyncReset := !io.RST
+    mainClock := io.CLK
+  } else {
+    val pll = new XilinxPLLBase(clkFrequency, Array(coreFrequency))
+    pll.io.CLKIN1 := io.CLK
+    pll.io.RST := !io.RST
+    pll.io.CLKFBIN := pll.io.CLKFBOUT
+    pll.io.PWRDWN := False
 
-  val bufg = new XilinxGlobalBuffer()
-  bufg.io.I := pll.io.CLKOUT0
+    val bufg = new XilinxGlobalBuffer()
+    bufg.io.I := pll.io.CLKOUT0
 
-  asyncReset := !io.RST && !pll.io.LOCKED
-  mainClock := bufg.io.O
+    asyncReset := !io.RST && !pll.io.LOCKED
+    mainClock := bufg.io.O
+  }
 
   io.TDO := jtag.tdo
   jtag.tck := io.TCK
@@ -63,7 +68,7 @@ class PQVexRiscvArty(
   io.TXD := uart.txd
 
   val memory = new ClockingArea(systemClockDomain) {
-    val ramBlocks = ramBlockSizes.zipWithIndex.map(t => PipelinedMemoryBusRam(t._1, if (t._2 == 0) initialContent else null))
+    val ramBlocks = ramBlockSizes.zipWithIndex.map(t => PipelinedMemoryBusRam(t._1, null))
     var curAddr : BigInt = 0x80000000l
     for (block <- ramBlocks) {
       busSlaves += block.io.bus -> SizeMapping(curAddr, block.size)
@@ -75,12 +80,16 @@ class PQVexRiscvArty(
 object PQVexRiscvArty {
   def main(args: Array[String]) : Unit = {
     case class PQVexRiscvArtyConfig(
-      ramBlocks: Seq[BigInt] = Seq(64 KiB, 64 KiB)
+      ramBlocks: Seq[BigInt] = Seq(64 KiB, 64 KiB),
+      clkFrequency: HertzNumber = 100 MHz,
+      coreFrequency: HertzNumber = 50 MHz
     )
     val optParser = new OptionParser[PQVexRiscvArtyConfig]("PQVexRiscvArty") {
       head("PQVexRiscvArty board")
       help("help") text("print usage text")
       opt[Seq[Int]]("ram") action((r, c) => c.copy(ramBlocks = r.map(_ KiB))) text("SRAM Blocks in KiB") valueName("<block1>,<block2>")
+      opt[Int]("clk") action((r, c) => c.copy(clkFrequency = (r MHz))) text("Input clock freqency in MHz") valueName("<freq>")
+      opt[Int]("core") action((r, c) => c.copy(coreFrequency = (r MHz))) text("Target core freqency in MHz") valueName("<freq>")
     }
     val config = optParser.parse(args, PQVexRiscvArtyConfig()) match {
       case Some(config) => config
@@ -89,6 +98,6 @@ object PQVexRiscvArty {
     SpinalConfig(
       mode = Verilog,
       targetDirectory = "rtl"
-    ).generate(new PQVexRiscvArty(ramBlockSizes = config.ramBlocks))
+    ).generate(new PQVexRiscvArty(ramBlockSizes = config.ramBlocks, clkFrequency = config.clkFrequency, coreFrequency = config.coreFrequency))
   }
 }
