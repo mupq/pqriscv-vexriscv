@@ -37,14 +37,14 @@ PQVexRiscvArtyA7.v: ../build.sbt $(shell find ../src -name "*.scala")
 	mv PQVexRiscvArty.v $@
 
 PQVexRiscvArtyS7.v: ../build.sbt $(shell find ../src -name "*.scala")
-	cd ../;	sbt "runMain mupq.PQVexRiscvArty --ram 192,64"
+	cd ../;	sbt "runMain mupq.PQVexRiscvArty --ram 128,64"
 	mv PQVexRiscvArty.v $@
 
 PQVexRiscvArtyA7.bit PQVexRiscvArtyA7.time: PQVexRiscvArtyA7.v PQVexRiscvArtyA7.tcl synth.tcl
-	vivado -nojournal -mode batch -source synth.tcl -tclargs -board PQVexRiscvArtyA7 -fast
+	vivado -nojournal -nolog -mode batch -source synth.tcl -tclargs -board PQVexRiscvArtyA7
 
 PQVexRiscvArtyS7.bit PQVexRiscvArtyS7.time: PQVexRiscvArtyS7.v PQVexRiscvArtyS7.tcl synth.tcl
-	vivado -nojournal -mode batch -source synth.tcl -tclargs -board PQVexRiscvArtyS7 -fast
+	vivado -nojournal -nolog -mode batch -source synth.tcl -tclargs -board PQVexRiscvArtyS7
 
 clean:
 	rm *.asc *.bit *.json *.time *.v *.dcp
