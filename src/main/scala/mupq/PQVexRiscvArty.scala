@@ -74,9 +74,21 @@ class PQVexRiscvArty(
 
 object PQVexRiscvArty {
   def main(args: Array[String]) : Unit = {
+    case class PQVexRiscvArtyConfig(
+      ramBlocks: Seq[BigInt] = Seq(64 KiB, 64 KiB)
+    )
+    val optParser = new OptionParser[PQVexRiscvArtyConfig]("PQVexRiscvArty") {
+      head("PQVexRiscvArty board")
+      help("help") text("print usage text")
+      opt[Seq[Int]]("ram") action((r, c) => c.copy(ramBlocks = r.map(_ KiB))) text("SRAM Blocks in KiB") valueName("<block1>,<block2>")
+    }
+    val config = optParser.parse(args, PQVexRiscvArtyConfig()) match {
+      case Some(config) => config
+      case None => ???
+    }
     SpinalConfig(
       mode = Verilog,
       targetDirectory = "rtl"
-    ).generate(new PQVexRiscvArty)
+    ).generate(new PQVexRiscvArty(ramBlockSizes = config.ramBlocks))
   }
 }

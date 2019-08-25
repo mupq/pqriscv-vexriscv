@@ -31,10 +31,18 @@ all: $(addsuffix .time,$(TARGETS)) $(addsuffix .bit,$(TARGETS))
 %.bit: %.asc
 	$(ICEPACK) $< $@
 
-PQVexRiscvArty.bit PQVexRiscvArty.time: PQVexRiscvArty.v
-	vivado -nojournal -log log.log -mode batch -source Arty-A7-fast.tcl
+
+PQVexRiscvArtyA7.v: ../build.sbt $(shell find ../src -name "*.scala")
+	cd ../;	sbt "runMain mupq.$(basename $@)"
+	mv PQVexRiscvArty.v $@
+
+PQVexRiscvArtyA7.bit PQVexRiscvArtyA7.time: PQVexRiscvArty.v PQVexRiscvArtyA7.tcl synth.tcl
+	vivado -nojournal -mode batch -source synth.tcl -tclargs -board PQVexRiscvArtyA7 -fast
+
+PQVexRiscvArtyS7.bit PQVexRiscvArtyS7.time: PQVexRiscvArty.v PQVexRiscvArtyS7.tcl synth.tcl
+	vivado -nojournal -mode batch -source synth.tcl -tclargs -board PQVexRiscvArtyS7 -fast
 
 clean:
-	rm *.asc *.bit *.json *.time
+	rm *.asc *.bit *.json *.time *.v *.dcp
 
 .SECONDARY:
