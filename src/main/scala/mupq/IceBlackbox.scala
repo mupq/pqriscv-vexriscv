@@ -51,7 +51,9 @@ class Ice40PLL2FCore(
     val BYPASS = in Bool
     val REFERENCECLK = in Bool
     val PLLOUTGLOBALA = out Bool
+    val PLLOUTCOREA = out Bool
     val PLLOUTGLOBALB = out Bool
+    val PLLOUTCOREB = out Bool
     val LOCK = out Bool
   }
   noIoPrefix()
