@@ -65,7 +65,7 @@ class SRAMController(val addrWidth : Int = 16, dataWidth : Int = 16) extends Com
 }
 
 
-class IcoboardBusTest(var extClock : Boolean = false, counterBits : Int = 19) extends Component {
+class IcoboardBusTest(var extClock : Boolean = false, counterBits : Int = 19, smallTest : Boolean = true) extends Component {
   val io = new Bundle {
     val clk_100mhz = in Bool
     val clk_90deg = if (extClock) in Bool else null
@@ -119,27 +119,44 @@ class IcoboardBusTest(var extClock : Boolean = false, counterBits : Int = 19) ex
   )
 
   val memory = new ClockingArea(pllDomain) {
-    val ram = new SRAMController(19, 16)
-    ram.io.clk90deg := clk_20mhz_90deg
-    // // val ice40io : Seq[Ice40IO] = (0 to 15).map(_ => new Ice40IO(0x29))
-    // val dataIn = Bits(16 bits)
-    // ice40io.zipWithIndex.foreach { case (tio, i) =>
-    //   tio.io.D_OUT_0 := ram.io.sram.dataOut(i)
-    //   tio.io.OUTPUT_ENABLE := ram.io.sram.oe_n
-    //   dataIn(i) := tio.io.D_IN_0
-    //   tio.io.PACKAGE_PIN := io.sram_data(i)
-    // }
-    io.sram_data.write <> ram.io.sram.dataOut
-    io.sram_data.read <> ram.io.sram.dataIn
-    io.sram_data.writeEnable.setAllTo(ram.io.sram.oe_n)
-    io.sram_addr <> ram.io.sram.addr
-    io.sram_ce_n <> ram.io.sram.ce_n
-    io.sram_oe_n <> ram.io.sram.oe_n
-    io.sram_we_n <> ram.io.sram.we_n
-    io.sram_lb_n <> ram.io.sram.sel_n(0)
-    io.sram_ub_n <> ram.io.sram.sel_n(1)
-
-    // ram.io.sram.dataIn <> dataIn
+    val busConfig = if (smallTest)
+                      PipelinedMemoryBusConfig(19, 16)
+                    else
+                      PipelinedMemoryBusConfig(18, 32)
+    val bus = PipelinedMemoryBus(busConfig)
+    if (smallTest) {
+      val ram = new SRAMController(19, 16)
+      ram.io.clk90deg := clk_20mhz_90deg
+      io.sram_data.write <> ram.io.sram.dataOut
+      io.sram_data.read <> ram.io.sram.dataIn
+      io.sram_data.writeEnable.setAllTo(ram.io.sram.oe_n)
+      io.sram_addr <> ram.io.sram.addr
+      io.sram_ce_n <> ram.io.sram.ce_n
+      io.sram_oe_n <> ram.io.sram.oe_n
+      io.sram_we_n <> ram.io.sram.we_n
+      io.sram_lb_n <> ram.io.sram.sel_n(0)
+      io.sram_ub_n <> ram.io.sram.sel_n(1)
+      bus <> ram.io.bus
+    } else {
+      val ram = new PipelinedMemoryBusSRAM(PipelinedMemoryBusConfig(20, 32))
+      ram.io.clk90deg := clk_20mhz_90deg
+      io.sram_data.write <> ram.io.sram.dataOut
+      io.sram_data.read <> ram.io.sram.dataIn
+      io.sram_data.writeEnable.setAllTo(ram.io.sram.oe_n)
+      io.sram_addr <> ram.io.sram.addr
+      io.sram_ce_n <> ram.io.sram.ce_n
+      io.sram_oe_n <> ram.io.sram.oe_n
+      io.sram_we_n <> ram.io.sram.we_n
+      io.sram_lb_n <> ram.io.sram.sel_n(0)
+      io.sram_ub_n <> ram.io.sram.sel_n(1)
+      ram.io.bus.rsp <> bus.rsp
+      ram.io.bus.cmd.ready <> bus.cmd.ready
+      ram.io.bus.cmd.valid <> bus.cmd.valid
+      ram.io.bus.cmd.data <> bus.cmd.data
+      ram.io.bus.cmd.write <> bus.cmd.write
+      ram.io.bus.cmd.mask <> bus.cmd.mask
+      ram.io.bus.cmd.address := bus.cmd.address << 2
+    }
 
     val fsm = new StateMachine() {
       val blinky = Counter(21 bit)
@@ -149,17 +166,18 @@ class IcoboardBusTest(var extClock : Boolean = false, counterBits : Int = 19) ex
       }
 
       val counter = Counter(counterBits bit)
-      val lsfr = Reg(Bits(16 bit))
-      ram.io.bus.cmd.address := counter.resized
-      ram.io.bus.cmd.data := lsfr
-      ram.io.bus.cmd.mask := B"11"
-      ram.io.bus.cmd.write := False
-      ram.io.bus.cmd.valid := False
+      val lsfr = Reg(Bits(busConfig.dataWidth bit))
+      bus.cmd.address := counter.resized
+      bus.cmd.data := lsfr
+      // bus.cmd.mask := B"11"
+      bus.cmd.mask.setAll()
+      bus.cmd.write := False
+      bus.cmd.valid := False
       when(counter.willClear || counter.willOverflow) {
         lsfr := 0xACE1
       }.elsewhen(counter.willIncrement) {
         val bit = lsfr(0) ^ lsfr(2) ^ lsfr(3) ^ lsfr(5)
-        lsfr := bit ## lsfr(15 downto 1)
+        lsfr := bit ## lsfr(lsfr.high downto 1)
       }
 
       val error = Reg(Bool) init(false)
@@ -180,24 +198,24 @@ class IcoboardBusTest(var extClock : Boolean = false, counterBits : Int = 19) ex
       }
 
       SIMPLEWRITE.whenIsActive {
-        ram.io.bus.cmd.data := 0xDEAD
-        ram.io.bus.cmd.valid := True
-        ram.io.bus.cmd.write := True
-        when(ram.io.bus.cmd.fire) {
+        bus.cmd.data := 0xDEAD
+        bus.cmd.valid := True
+        bus.cmd.write := True
+        when(bus.cmd.fire) {
           goto(SIMPLEREAD)
         }
       }
 
       SIMPLEREAD.whenIsActive {
-        ram.io.bus.cmd.data := 0x0000
-        ram.io.bus.cmd.valid := counter === U(0)
-        ram.io.bus.cmd.write := False
-        when(ram.io.bus.cmd.fire) {
+        bus.cmd.data := 0x0000
+        bus.cmd.valid := counter === U(0)
+        bus.cmd.write := False
+        when(bus.cmd.fire) {
           counter.increment
         }
-        when(ram.io.bus.rsp.fire) {
+        when(bus.rsp.fire) {
           goto(WRITE)
-          when(ram.io.bus.rsp.data =/= 0xDEAD) {
+          when(bus.rsp.data =/= 0xDEAD) {
             goto(TEST)
           }
         }
@@ -209,9 +227,9 @@ class IcoboardBusTest(var extClock : Boolean = false, counterBits : Int = 19) ex
 
 
       WRITE.whenIsActive {
-        ram.io.bus.cmd.valid := True
-        ram.io.bus.cmd.write := True
-        when(ram.io.bus.cmd.fire) {
+        bus.cmd.valid := True
+        bus.cmd.write := True
+        when(bus.cmd.fire) {
           counter.increment
         }
         blinky.increment
@@ -229,13 +247,13 @@ class IcoboardBusTest(var extClock : Boolean = false, counterBits : Int = 19) ex
         valid := True
       }
       READ.whenIsActive {
-        ram.io.bus.cmd.data := 0x0000
-        ram.io.bus.cmd.valid := valid
-        when(ram.io.bus.cmd.fire) {
+        bus.cmd.data := 0x0000
+        bus.cmd.valid := valid
+        when(bus.cmd.fire) {
           valid := False
         }
-        when(ram.io.bus.rsp.fire) {
-          error := error || (ram.io.bus.rsp.data =/= lsfr)
+        when(bus.rsp.fire) {
+          error := error || (bus.rsp.data =/= lsfr)
           valid := True
           counter.increment
         }

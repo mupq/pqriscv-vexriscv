@@ -36,13 +36,11 @@ class PipelinedMemoryBusSRAM(busConfig: PipelinedMemoryBusConfig) extends Compon
 
   val addr = Reg(Bits(io.sram.addrWidth bit))
   val dataOut = Reg(Bits(16 bit))
-  val dataIn = Bits(16 bit)
   val we_n = RegNext(True) init(true)
   val selAllSet = B(2 bits, default -> true)
   val sel_n = Reg(selAllSet) init(selAllSet)
 
   io.sram.addr := addr
-  dataIn := io.sram.dataIn
   io.sram.dataOut := dataOut
   io.sram.ce_n := RegNext(False) init(true)
   io.sram.we_n := we_n || !io.clk90deg
@@ -75,7 +73,7 @@ class PipelinedMemoryBusSRAM(busConfig: PipelinedMemoryBusConfig) extends Compon
 
     val LOWER = new State
     LOWER.whenIsActive {
-      data(15 downto 0) := dataIn
+      data(15 downto 0) := io.sram.dataIn
       /* Setup read/write for upper byte */
       addr := cmd.address(io.sram.addrWidth downto 2).asBits ## True
       dataOut := cmd.data(31 downto 16)
@@ -86,7 +84,7 @@ class PipelinedMemoryBusSRAM(busConfig: PipelinedMemoryBusConfig) extends Compon
 
     val UPPER = new State
     UPPER.whenIsActive {
-      data(31 downto 16) := dataIn
+      data(31 downto 16) := io.sram.dataIn
       valid := !cmd.write
       goto(IDLE)
     }
@@ -142,10 +140,10 @@ class PQVexRiscvIcoboard(
   val clk_20mhz = Bool
   val clk_20mhz_90deg = Bool
   clk_20mhz := pll.io.PLLOUTGLOBALA
-  clk_20mhz_90deg := pll.io.PLLOUTGLOBALB
+  clk_20mhz_90deg := pll.io.PLLOUTCOREB
 
   asyncReset := !pll.io.LOCK
-  mainClock := pll.io.PLLOUTGLOBALA
+  mainClock := clk_20mhz
 
   jtag.tdo <> io.pmod4_1
   jtag.tck <> io.pmod4_3
@@ -188,9 +186,10 @@ class PQVexRiscvIcoboard(
 
 object PQVexRiscvIcoboard {
   def main(args: Array[String]) : Unit = {
+    val plugins = PQVexRiscv.defaultPlugins.filterNot(p => p.isInstanceOf[Mul16Plugin] || p.isInstanceOf[MulDivIterativePlugin]) ++ Seq(new MulDivIterativePlugin(true, true, 1, 1))
     SpinalConfig(
       mode = Verilog,
       targetDirectory = "rtl"
-    ).generate(InOutWrapper(new PQVexRiscvIcoboard)).printPruned()
+    ).generate(InOutWrapper(new PQVexRiscvIcoboard(cpuPlugins = plugins))).printPruned()
   }
 }

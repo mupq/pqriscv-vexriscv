@@ -16,7 +16,7 @@ class SRAMTest extends FlatSpec {
   var sram: SimCompiled[IcoboardBusTest] = null
   "An SRAM controller" should "compile" in {
     sram = SimConfig.withFstWave.compile {
-      val sram = new IcoboardBusTest(extClock = true, counterBits = 8)
+      val sram = new IcoboardBusTest(extClock = true, smallTest = false, counterBits = 8)
       sram.memory.fsm.stateReg.simPublic()
       sram
     }
