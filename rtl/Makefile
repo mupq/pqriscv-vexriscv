@@ -2,12 +2,15 @@ TARGETS ?= PQVexRiscvUP5K PQVexRiscvIcoboard
 
 PQVexRiscvUP5K_DEVICE ?= up5k
 PQVexRiscvIcoboard_DEVICE ?= hx8k
+IcoboardBusTest_DEVICE ?= hx8k
 
 PQVexRiscvUP5K_PACKAGE ?= sg48
 PQVexRiscvIcoboard_PACKAGE ?= ct256
+IcoboardBusTest_PACKAGE ?= ct256
 
 PQVexRiscvUP5K_YOSYSFLAGS ?= -dsp
 PQVexRiscvIcoboard_YOSYSFLAGS ?=
+IcoboardBusTest_YOSYSFLAGS ?=
 
 YOSYS = yosys
 NEXTPNR = nextpnr-ice40
