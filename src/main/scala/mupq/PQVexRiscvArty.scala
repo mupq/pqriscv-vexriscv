@@ -19,6 +19,35 @@ import spinal.lib.com.jtag.sim.JtagTcp
 import vexriscv.VexRiscv
 import vexriscv.plugin.Plugin
 
+case class PipelinedMemoryBusXilinxRam(size : BigInt, latency : Int = 1) extends Component{
+  require(size % 4 == 0, "Size must be multiple of 4 bytes")
+  require(size > 0, "Size must be greater than zero")
+  val busConfig = PipelinedMemoryBusConfig(log2Up(size), 32)
+  val io = new Bundle{
+    val bus = slave(PipelinedMemoryBus(busConfig))
+  }
+
+  val ram = new XilinxSinglePortRAM(
+    dataWidth = 32,
+    numWords = size / 4,
+    readLatency = latency,
+    byteWrite = true)
+
+  ram.io.dina := io.bus.cmd.data
+  ram.io.addra := io.bus.cmd.address.asBits >> 2
+  ram.io.ena := io.bus.cmd.valid
+  ram.io.wea := io.bus.cmd.write ? io.bus.cmd.mask | B"0000"
+  ram.io.regcea := True
+  ram.io.injectdbiterra := False
+  ram.io.injectsbiterra := False
+  ram.io.sleep := False
+  io.bus.cmd.ready := True
+
+  io.bus.rsp.valid := Delay(io.bus.cmd.fire && !io.bus.cmd.write, latency, init = False)
+  io.bus.rsp.data := ram.io.douta
+}
+
+
 class PQVexRiscvArty(
   val ramBlockSizes : Seq[BigInt] = Seq[BigInt](64 KiB, 64 KiB),
   val clkFrequency : HertzNumber = 100 MHz,
@@ -68,7 +97,7 @@ class PQVexRiscvArty(
   io.TXD := uart.txd
 
   val memory = new ClockingArea(systemClockDomain) {
-    val ramBlocks = ramBlockSizes.zipWithIndex.map(t => PipelinedMemoryBusRam(t._1, null))
+    val ramBlocks = ramBlockSizes.zipWithIndex.map(t => PipelinedMemoryBusXilinxRam(t._1))
     var curAddr : BigInt = 0x80000000l
     for (block <- ramBlocks) {
       busSlaves += block.io.bus -> SizeMapping(curAddr, block.size)

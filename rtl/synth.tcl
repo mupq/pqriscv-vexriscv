@@ -26,6 +26,8 @@ foreach constr ${CONSTRAINTS} {
     read_xdc $constr
 }
 
+auto_detect_xpm
+
 if {${SYNTH_CHECKPOINT} == false && ${PNR_CHECKPOINT} == false} {
     synth_design {*}${QUIET} {*}${SYNTH_ARGS}
     opt_design {*}${QUIET} -directive ${OPT_DIRECTIVE}

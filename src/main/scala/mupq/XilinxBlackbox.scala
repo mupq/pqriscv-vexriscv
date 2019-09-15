@@ -122,3 +122,48 @@ class XilinxGlobalBuffer extends BlackBox {
   noIoPrefix()
   setBlackBoxName("BUFG")
 }
+
+class XilinxSinglePortRAM(val dataWidth : Int, val numWords : BigInt, val readLatency : Int = 1, val byteWrite : Boolean = true) extends BlackBox {
+  require(!byteWrite || dataWidth % 8 == 0, "dataWidth must be multiple of 8 if byteWrite is enabled")
+  val addrWidth = log2Up(numWords)
+  val generic = new Generic {
+    val ADDR_WIDTH_A : Int = addrWidth
+    val AUTO_SLEEP_TIME : Int = 0
+    val BYTE_WRITE_WIDTH_A : Int = if (byteWrite) 8 else dataWidth
+    val CASCADE_HEIGHT : Int = 0
+    val ECC_MODE : String = "no_ecc"
+    val MEMORY_INIT_FILE : String = "none"
+    val MEMORY_INIT_PARAM : String = "0"
+    val MEMORY_OPTIMIZATION : String = "true"
+    val MEMORY_PRIMITIVE : String = "block"
+    val MEMORY_SIZE : Int = dataWidth * numWords.toInt
+    val MESSAGE_CONTROL : Int = 0
+    val READ_DATA_WIDTH_A : Int = dataWidth
+    val READ_LATENCY_A : Int = readLatency
+    val READ_RESET_VALUE_A : String = "0"
+    val RST_MODE_A : String = if (ClockDomain.current.config.resetKind == ASYNC) "ASYNC" else "SYNC"
+    val SIM_ASSERT_CHK : Int = 0
+    val USE_MEM_INIT : Int = 0
+    val WAKEUP_TIME : String = "disable_sleep"
+    val WRITE_DATA_WIDTH_A : Int = dataWidth
+    val WRITE_MODE_A : String = "read_first"
+  }
+  val io = new Bundle() {
+    val dina = in Bits(dataWidth bits)
+    val addra = in Bits(addrWidth bits)
+    val wea = in Bits((if (byteWrite) dataWidth / 8 else dataWidth) bits)
+    val douta = out Bits(dataWidth bits)
+    val clka = in Bool
+    val rsta = in Bool
+    val ena = in Bool
+    val regcea = in Bool
+    val injectsbiterra = in Bool
+    val sbiterra = out Bool
+    val injectdbiterra = in Bool
+    val dbiterra = out Bool
+    val sleep = in Bool
+  }
+  noIoPrefix()
+  setBlackBoxName("xpm_memory_spram")
+  mapCurrentClockDomain(io.clka, io.rsta)
+}
