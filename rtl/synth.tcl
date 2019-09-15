@@ -44,7 +44,15 @@ if {${PNR_CHECKPOINT} == false} {
 }
 
 report_timing_summary -file ${PROJECT_NAME}.time
-write_bitstream -force ${PROJECT_NAME}.bit
+report_utilization -file ${PROJECT_NAME}.util
+
+if {${WRITE_MCS} == true} {
+    set_property CONFIG_MODE ${FLASH_INTERFACE} [current_design]
+    write_bitstream -force ${PROJECT_NAME}.bit
+    write_cfgmem -force -format mcs -size ${FLASH_SIZE} -interface ${FLASH_INTERFACE} -loadbit "up 0x0 ${PROJECT_NAME}.bit" ${PROJECT_NAME}.mcs
+} else {
+    write_bitstream -force ${PROJECT_NAME}.bit
+}
 
 # Get the Slack
 set WNS [get_property SLACK [get_timing_paths -max_paths 1 -nworst 1 -setup]]

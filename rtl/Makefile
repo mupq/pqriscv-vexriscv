@@ -14,6 +14,8 @@ NEXTPNR = nextpnr-ice40
 ICETIME = icetime
 ICEPACK = icepack
 
+XILINX_SYNTH_ARGS ?=
+
 all: $(addsuffix .time,$(TARGETS)) $(addsuffix .bit,$(TARGETS))
 
 %.v: ../build.sbt $(shell find ../src -name "*.scala")
@@ -40,11 +42,11 @@ PQVexRiscvArtyS7.v: ../build.sbt $(shell find ../src -name "*.scala")
 	cd ../;	sbt "runMain mupq.PQVexRiscvArty --ram 128,64 --clk 12 --core 12"
 	mv PQVexRiscvArty.v $@
 
-PQVexRiscvArtyA7.bit PQVexRiscvArtyA7.time: PQVexRiscvArtyA7.v PQVexRiscvArtyA7.tcl synth.tcl
-	vivado -nojournal -nolog -mode batch -source synth.tcl -tclargs -board PQVexRiscvArtyA7
+PQVexRiscvArtyA7.mcs PQVexRiscvArtyA7.bit PQVexRiscvArtyA7.time PQVexRiscvArtyA7.util: PQVexRiscvArtyA7.v PQVexRiscvArtyA7.tcl synth.tcl
+	vivado -nojournal -nolog -mode batch -source synth.tcl -tclargs -board PQVexRiscvArtyA7 $(XILINX_SYNTH_ARGS)
 
-PQVexRiscvArtyS7.bit PQVexRiscvArtyS7.time: PQVexRiscvArtyS7.v PQVexRiscvArtyS7.tcl synth.tcl
-	vivado -nojournal -nolog -mode batch -source synth.tcl -tclargs -board PQVexRiscvArtyS7
+PQVexRiscvArtyS7.mcs PQVexRiscvArtyS7.bit PQVexRiscvArtyS7.time PQVexRiscvArtyS7.util: PQVexRiscvArtyS7.v PQVexRiscvArtyS7.tcl synth.tcl
+	vivado -nojournal -nolog -mode batch -source synth.tcl -tclargs -board PQVexRiscvArtyS7 $(XILINX_SYNTH_ARGS)
 
 clean:
 	rm *.asc *.bit *.json *.time *.v *.dcp
