@@ -46,9 +46,6 @@ class Mul16Plugin extends Plugin[VexRiscv]{
     import pipeline._
     import pipeline.config._
 
-    // var dsps : Seq[Ice40Multiplier] = (0 until (if(useIceDsp) 4 else 0)).map(i => new Ice40Multiplier(false)).toSeq
-    // dsps.foreach(_.assignDefaults)
-
     // Prepare signed inputs for the multiplier in the next stage.
     // This will map them best to an FPGA DSP.
     execute plug new Area {
@@ -63,21 +60,10 @@ class Mul16Plugin extends Plugin[VexRiscv]{
       val aHigh = a(31 downto 16).asUInt
       val bHigh = b(31 downto 16).asUInt
 
-      // if (useIceDsp) {
-      //   dsps(0).io.A := aLow.asBits
-      //   dsps(0).io.B := bLow.asBits
-      //   dsps(1).io.A := aLow.asBits
-      //   dsps(1).io.B := bHigh.asBits
-      //   dsps(2).io.A := aHigh.asBits
-      //   dsps(2).io.B := bLow.asBits
-      //   dsps(3).io.A := aHigh.asBits
-      //   dsps(3).io.B := bHigh.asBits
-      // } else {
       insert(MUL_LL) := aLow * bLow
       insert(MUL_LH) := aLow * bHigh
       insert(MUL_HL) := aHigh * bLow
       insert(MUL_HH) := aHigh * bHigh
-      // }
     }
 
     memory plug new Area {
@@ -88,17 +74,11 @@ class Mul16Plugin extends Plugin[VexRiscv]{
       val hl = UInt(32 bits)
       val hh = UInt(32 bits)
 
-      // if (useIceDsp) {
-      //   ll := dsps(0).io.O.asUInt
-      //   lh := dsps(1).io.O.asUInt.resized
-      //   hl := dsps(2).io.O.asUInt
-      //   hh := dsps(3).io.O.asUInt
-      // } else {
       ll := input(MUL_LL)
       lh := input(MUL_LH).resized
       hl := input(MUL_HL)
       hh := input(MUL_HH)
-      // }
+
       val hllh = lh + hl
       insert(MUL) := ((hh ## ll(31 downto 16)).asUInt + hllh) ## ll(15 downto 0)
     }
@@ -130,7 +110,7 @@ class Mul16Plugin extends Plugin[VexRiscv]{
             output(REGFILE_WRITE_DATA) := input(MUL)(31 downto 0)
           }
           is(B"01",B"10",B"11"){
-            output(REGFILE_WRITE_DATA) := ((input(MUL)(63 downto 32)).asUInt + a + b).asBits
+            output(REGFILE_WRITE_DATA) := (((input(MUL)(63 downto 32)).asUInt + ~a) + (~b + 2)).asBits
           }
         }
       }
