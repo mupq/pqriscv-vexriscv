@@ -58,7 +58,7 @@ class PQVexRiscvSim(
   val ramBlockSizes : Seq[BigInt] = Seq[BigInt](256 KiB, 128 KiB),
   val initialContent : File = null,
   val coreFrequency : HertzNumber = 12 MHz,
-  cpuPlugins : Seq[Plugin[VexRiscv]] = PQVexRiscv.defaultPlugins
+  cpuPlugins : Seq[Plugin[VexRiscv]] = PQVexRiscv.withDSPMultiplier
 ) extends PQVexRiscv(
   cpuPlugins = cpuPlugins,
   ibusRange = SizeMapping(0x80000000l, ramBlockSizes.reduce(_ + _))

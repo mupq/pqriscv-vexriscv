@@ -188,49 +188,80 @@ abstract class PQVexRiscv(
 
 object PQVexRiscv
 {
-  def defaultPlugins: Seq[Plugin[VexRiscv]] = Seq(
-      new IBusSimplePlugin(
-        resetVector = 0x80000000l,
-        cmdForkOnSecondStage = true,
-        cmdForkPersistence = false,
-        prediction = NONE,
-        catchAccessFault = false,
-        compressedGen = false
-      ),
-      new DBusSimplePlugin(
-        catchAddressMisaligned = false,
-        catchAccessFault = false,
-        earlyInjection = false
-      ),
-      new CsrPlugin(CsrPluginConfig.smallest(0x80000000l).copy(mtvecAccess = CsrAccess.READ_WRITE, mcycleAccess = CsrAccess.READ_ONLY, minstretAccess = CsrAccess.READ_ONLY)),
-      new DecoderSimplePlugin(
-        catchIllegalInstruction = false
-      ),
-      new RegFilePlugin(
-        regFileReadyKind = plugin.SYNC,
-        zeroBoot = false
-      ),
-      new IntAluPlugin,
-      new SrcPlugin(
-        separatedAddSub = false,
-        executeInsertion = false
-      ),
-      new FullBarrelShifterPlugin,
-      new Mul16Plugin,
-      new MulDivIterativePlugin(false, true, 32, 1),
-      new HazardSimplePlugin(
-        bypassExecute = true,
-        bypassMemory = true,
-        bypassWriteBack = true,
-        bypassWriteBackBuffer = true,
-        pessimisticUseSrc = false,
-        pessimisticWriteRegFile = false,
-        pessimisticAddressMatch = false
-      ),
-      new BranchPlugin(
-        earlyBranch = false,
-        catchAddressMisaligned = false
-      ),
-      new YamlPlugin("cpu0.yaml")
+  /** Basic set of Plugins (conforms mostly to rv32i) */
+  def baseConfig: Seq[Plugin[VexRiscv]] = Seq(
+    new IBusSimplePlugin(
+      resetVector = 0x80000000l,
+      cmdForkOnSecondStage = true,
+      cmdForkPersistence = false,
+      prediction = NONE,
+      catchAccessFault = false,
+      compressedGen = false
+    ),
+    new DBusSimplePlugin(
+      catchAddressMisaligned = false,
+      catchAccessFault = false,
+      earlyInjection = false
+    ),
+    new CsrPlugin(
+      CsrPluginConfig.smallest(0x80000000l).copy(
+        mtvecAccess = CsrAccess.READ_WRITE,
+        mcycleAccess = CsrAccess.READ_ONLY,
+        minstretAccess = CsrAccess.READ_ONLY
+      )
+    ),
+    new DecoderSimplePlugin(
+      catchIllegalInstruction = false
+    ),
+    new RegFilePlugin(
+      regFileReadyKind = plugin.SYNC,
+      zeroBoot = false
+    ),
+    new IntAluPlugin,
+    new SrcPlugin(
+      separatedAddSub = false,
+      executeInsertion = false
+    ),
+    new FullBarrelShifterPlugin,
+    new HazardSimplePlugin(
+      bypassExecute = true,
+      bypassMemory = true,
+      bypassWriteBack = true,
+      bypassWriteBackBuffer = true,
+      pessimisticUseSrc = false,
+      pessimisticWriteRegFile = false,
+      pessimisticAddressMatch = false
+    ),
+    new BranchPlugin(
+      earlyBranch = false,
+      catchAddressMisaligned = false
+    ),
+    new YamlPlugin("cpu0.yaml")
+  )
+
+  /** Plugins for a small multiplier */
+  def smallMultiplier = Seq(
+    new MulDivIterativePlugin(
+      genMul = true,
+      genDiv = true,
+      mulUnrollFactor = 1,
+      divUnrollFactor = 1
     )
+  )
+
+  /** Config with a small multiplier */
+  def withSmallMultiplier = baseConfig ++ smallMultiplier
+
+  /** Plugins for a multiplier for FPGAs */
+  def dspMultiplier = Seq(
+    new Mul16Plugin,
+    new MulDivIterativePlugin(
+      genMul = false,
+      genDiv = true,
+      divUnrollFactor = 1
+    )
+  )
+
+  /** Config with a multiplier for FPGAs */
+  def withDSPMultiplier = baseConfig ++ dspMultiplier
 }
