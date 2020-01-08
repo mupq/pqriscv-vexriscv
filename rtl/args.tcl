@@ -27,6 +27,13 @@ if {${PROJECT_NAME} == false} {
     exit 1
 }
 
+if {![file exists "${PROJECT_NAME}.tcl"]} {
+    puts "Board file ${PROJECT_NAME}.tcl missing!"
+    exit 1
+}
+
+source "${PROJECT_NAME}.tcl"
+
 set SYNTH_CHECKPOINT [has_arg_with_param ${argv} -synth_dcp]
 if {${SYNTH_CHECKPOINT} != false && ![file exists ${SYNTH_CHECKPOINT}]} {
     puts "Synth checkpoint ${SYNTH_CHECKPOINT} does not exist!"
@@ -39,8 +46,9 @@ if {${PNR_CHECKPOINT} != false && ![file exists ${PNR_CHECKPOINT}]} {
     exit 1
 }
 
-if {![file exists "${PROJECT_NAME}.tcl"]} {
-    puts "Board file ${PROJECT_NAME}.tcl missing!"
+set SOURCE_OVERWRITE [has_arg_with_param ${argv} -source]
+if {${SOURCE_OVERWRITE} != false && ![file exists ${SOURCE_OVERWRITE}]} {
+    puts "Sources don't exist!"
     exit 1
 }
 
@@ -51,12 +59,17 @@ if {${MAXDSPS} == false} {
     scan ${MAXDSPS} %d MAXDSPS
 }
 
+set OUTPUT_NAME [has_arg_with_param ${argv} "-out"]
+if {${OUTPUT_NAME} == false} {
+} else {
+    set PROJECT_NAME ${OUTPUT_NAME}
+}
+
 # The sourced script should set the following variables
 # SOURCES: List of source files
 # CONSTRAINTS: List of constraint files
 # TOPLEVEL: Toplevel module
 # PARTNUMBER: Partnumber
-source "${PROJECT_NAME}.tcl"
 
 set FAST [has_arg ${argv} -fast]
 set PERF [has_arg ${argv} -perf]

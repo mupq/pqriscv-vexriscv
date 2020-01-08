@@ -18,8 +18,12 @@ lappend SYNTH_ARGS -part ${PARTNUMBER}
 
 # set SYNTH_ARGS [join ${SYNTH_ARGS} " "]
 
-foreach src ${SOURCES} {
-    read_verilog $src
+if {${SOURCE_OVERWRITE} == false} {
+  foreach src ${SOURCES} {
+      read_verilog $src
+  }
+} else {
+    read_verilog ${SOURCE_OVERWRITE}
 }
 
 foreach constr ${CONSTRAINTS} {

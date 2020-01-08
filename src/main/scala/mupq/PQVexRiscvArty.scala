@@ -111,7 +111,8 @@ object PQVexRiscvArty {
     case class PQVexRiscvArtyConfig(
       ramBlocks: Seq[BigInt] = Seq(64 KiB, 64 KiB),
       clkFrequency: HertzNumber = 100 MHz,
-      coreFrequency: HertzNumber = 50 MHz
+      coreFrequency: HertzNumber = 50 MHz,
+      cpuPlugins: Seq[Plugin[VexRiscv]] = PQVexRiscv.baseConfig
     )
     val optParser = new OptionParser[PQVexRiscvArtyConfig]("PQVexRiscvArty") {
       head("PQVexRiscvArty board")
@@ -119,6 +120,7 @@ object PQVexRiscvArty {
       opt[Seq[Int]]("ram") action((r, c) => c.copy(ramBlocks = r.map(_ KiB))) text("SRAM Blocks in KiB") valueName("<block1>,<block2>")
       opt[Int]("clk") action((r, c) => c.copy(clkFrequency = (r MHz))) text("Input clock freqency in MHz") valueName("<freq>")
       opt[Int]("core") action((r, c) => c.copy(coreFrequency = (r MHz))) text("Target core freqency in MHz") valueName("<freq>")
+      opt[Unit]("mul") action((_, c) => c.copy(cpuPlugins = c.cpuPlugins ++ PQVexRiscv.dspMultiplier))
     }
     val config = optParser.parse(args, PQVexRiscvArtyConfig()) match {
       case Some(config) => config
@@ -127,6 +129,6 @@ object PQVexRiscvArty {
     SpinalConfig(
       mode = Verilog,
       targetDirectory = "rtl"
-    ).generate(new PQVexRiscvArty(ramBlockSizes = config.ramBlocks, clkFrequency = config.clkFrequency, coreFrequency = config.coreFrequency))
+    ).generate(new PQVexRiscvArty(ramBlockSizes = config.ramBlocks, clkFrequency = config.clkFrequency, coreFrequency = config.coreFrequency, cpuPlugins = config.cpuPlugins))
   }
 }

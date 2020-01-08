@@ -16,9 +16,11 @@ ICEPACK = icepack
 
 XILINX_SYNTH_ARGS ?=
 
+SCALA_SOURCES := $(shell find ../src -name "*.scala")
+
 all: $(addsuffix .time,$(TARGETS)) $(addsuffix .bit,$(TARGETS))
 
-%.v: ../build.sbt $(shell find ../src -name "*.scala")
+%.v: ../build.sbt $(SCALA_SOURCES)
 	cd ../;	sbt "runMain mupq.$(basename $@)"
 
 %.json: %.v
@@ -33,12 +35,11 @@ all: $(addsuffix .time,$(TARGETS)) $(addsuffix .bit,$(TARGETS))
 %.bit: %.asc
 	$(ICEPACK) $< $@
 
-
-PQVexRiscvArtyA7.v: ../build.sbt $(shell find ../src -name "*.scala")
-	cd ../;	sbt "runMain mupq.PQVexRiscvArty"
+PQVexRiscvArtyA7.v: ../build.sbt $(SCALA_SOURCES)
+	cd ../;	sbt "runMain mupq.PQVexRiscvArty --mul"
 	mv PQVexRiscvArty.v $@
 
-PQVexRiscvArtyS7.v: ../build.sbt $(shell find ../src -name "*.scala")
+PQVexRiscvArtyS7.v: ../build.sbt $(SCALA_SOURCES)
 	cd ../;	sbt "runMain mupq.PQVexRiscvArty --ram 128,64 --clk 12 --core 12"
 	mv PQVexRiscvArty.v $@
 

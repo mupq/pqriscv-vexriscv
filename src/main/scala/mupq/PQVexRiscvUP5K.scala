@@ -1,5 +1,7 @@
 package mupq
 
+import scopt.OptionParser
+
 import spinal.core._
 import spinal.lib._
 import spinal.lib.bus.misc._
@@ -96,9 +98,21 @@ class PQVexRiscvUP5K(
 
 object PQVexRiscvUP5K {
   def main(args: Array[String]) : Unit = {
+    case class PQVexRiscvUP5KConfig(
+      cpuPlugins: Seq[Plugin[VexRiscv]] = PQVexRiscv.baseConfig
+    )
+    val optParser = new OptionParser[PQVexRiscvUP5KConfig]("PQVexRiscvUP5K") {
+      head("PQVexRiscvUP5K board")
+      help("help") text("print usage text")
+      opt[Unit]("mul") action((_, c) => c.copy(cpuPlugins = c.cpuPlugins ++ PQVexRiscv.dspMultiplier))
+    }
+    val config = optParser.parse(args, PQVexRiscvUP5KConfig()) match {
+      case Some(config) => config
+      case None => ???
+    }
     SpinalConfig(
       mode = Verilog,
       targetDirectory = "rtl"
-    ).generate(new PQVexRiscvUP5K)
+    ).generate(new PQVexRiscvUP5K(cpuPlugins = config.cpuPlugins))
   }
 }
