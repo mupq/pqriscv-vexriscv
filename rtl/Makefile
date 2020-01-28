@@ -1,13 +1,5 @@
-TARGETS ?= PQVexRiscvUP5K PQVexRiscvIcoboard
-
-PQVexRiscvUP5K_DEVICE ?= up5k
-PQVexRiscvIcoboard_DEVICE ?= hx8k
-
-PQVexRiscvUP5K_PACKAGE ?= sg48
-PQVexRiscvIcoboard_PACKAGE ?= ct256
-
-PQVexRiscvUP5K_YOSYSFLAGS ?= -dsp
-PQVexRiscvIcoboard_YOSYSFLAGS ?=
+ICESTORM_TARGETS ?= PQVexRiscvUP5K PQVexRiscvIcoboard
+VIVADO_TARGETS ?= PQVexRiscvArtyA7
 
 YOSYS = yosys
 NEXTPNR = nextpnr-ice40
@@ -18,38 +10,52 @@ XILINX_SYNTH_ARGS ?=
 
 SCALA_SOURCES := $(shell find ../src -name "*.scala")
 
-all: $(addsuffix .time,$(TARGETS)) $(addsuffix .bit,$(TARGETS))
+all: $(addsuffix .bit,$(ICESTORM_TARGETS)) $(addsuffix .mcs,$(VIVADO_TARGETS))
+
+GENERATOR_FLAGS =
+GENERATOR_NAME = $(basename $@)
+GENERATED_FILE = $(GENERATOR_NAME).v
+
+.SECONDEXPANSION:
 
 %.v: ../build.sbt $(SCALA_SOURCES)
-	cd ../;	sbt "runMain mupq.$(basename $@)"
+	cd ../;	sbt "runMain mupq.$(GENERATOR_NAME) $(GENERATOR_FLAGS)"
+	if [ "$(GENERATED_FILE)" != "$@" ]; then \
+		mv $(GENERATED_FILE) $@; \
+	fi
 
-%.json: %.v
-	$(YOSYS) -q -p "synth_ice40 -top $(basename $<) -json $@ $($(basename $<)_YOSYSFLAGS)" $<
 
-%.asc: %.json %.pcf
-	$(NEXTPNR) --$($(basename $<)_DEVICE) --package $($(basename $<)_PACKAGE) --json $< --pcf $(filter %.pcf,$^) --asc $@
+TOPLEVEL_MODULE = $*
 
-%.time: %.asc
-	$(ICETIME) -tmd $($(basename $<)_DEVICE) $< | tee $@
+%.json %_yosys.log: %.v
+	$(YOSYS) -q -l $*_yosys.log -p "synth_ice40 -top $(TOPLEVEL_MODULE) -json $@ $(YOSYSFLAGS)" $<
+
+PCF_FILE = $*.pcf
+
+%.asc %_pnr.log: %.json $$(PCF_FILE)
+	$(NEXTPNR) -l $*_pnr.log --$(DEVICE) --package $(PACKAGE) --json $< --pcf $(PCF_FILE) --asc $@
 
 %.bit: %.asc
 	$(ICEPACK) $< $@
 
-PQVexRiscvArtyA7.v: ../build.sbt $(SCALA_SOURCES)
-	cd ../;	sbt "runMain mupq.PQVexRiscvArty --mul"
-	mv PQVexRiscvArty.v $@
+PQVexRiscvUP5K.v: GENERATOR_FLAGS=--mul
+PQVexRiscvUP5K.json: YOSYSFLAGS=-dsp
+PQVexRiscvUP5K.asc: PACKAGE=sg48
+PQVexRiscvIcoboard.asc: PACKAGE=ct256
+PQVexRiscvUP5K.asc: DEVICE=up5k
+PQVexRiscvIcoboard.asc: DEVICE=hx8k
 
-PQVexRiscvArtyS7.v: ../build.sbt $(SCALA_SOURCES)
-	cd ../;	sbt "runMain mupq.PQVexRiscvArty --ram 128,64 --clk 12 --core 12"
-	mv PQVexRiscvArty.v $@
+PQVexRiscvArtyA7.v: GENERATOR_NAME=PQVexRiscvArty
+PQVexRiscvArtyS7.v: GENERATOR_NAME=PQVexRiscvArty
+PQVexRiscvArtyA7.v: GENERATOR_FLAGS=--mul
+PQVexRiscvArtyS7.v: GENERATOR_FLAGS=--mul
 
-PQVexRiscvArtyA7.mcs PQVexRiscvArtyA7.bit PQVexRiscvArtyA7.time PQVexRiscvArtyA7.util: PQVexRiscvArtyA7.v PQVexRiscvArtyA7.tcl synth.tcl
-	vivado -nojournal -nolog -mode batch -source synth.tcl -tclargs -board PQVexRiscvArtyA7 $(XILINX_SYNTH_ARGS)
+BOARD = $*
 
-PQVexRiscvArtyS7.mcs PQVexRiscvArtyS7.bit PQVexRiscvArtyS7.time PQVexRiscvArtyS7.util: PQVexRiscvArtyS7.v PQVexRiscvArtyS7.tcl synth.tcl
-	vivado -nojournal -nolog -mode batch -source synth.tcl -tclargs -board PQVexRiscvArtyS7 $(XILINX_SYNTH_ARGS)
+%.mcs %.time %.util: %.v $$(BOARD).tcl synth.tcl args.tcl
+	vivado -nojournal -nolog -mode batch -source synth.tcl -tclargs -board $(BOARD) $(XILINX_SYNTH_ARGS)
 
 clean:
-	rm *.asc *.bit *.json *.time *.v *.dcp
+	rm -f *.asc *.bit *.json *.log *.v *.dcp *.mcs *.util *.time
 
 .SECONDARY:
