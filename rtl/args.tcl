@@ -52,6 +52,7 @@ if {![file exists "${PROJECT_NAME}.tcl"]} {
 source "${PROJECT_NAME}.tcl"
 
 set FAST [has_arg ${argv} -fast]
+set PERF [has_arg ${argv} -perf]
 
 set SYNTH_DIRECTIVE "AreaOptimized_high"
 set OPT_DIRECTIVE "ExploreArea"
@@ -65,6 +66,12 @@ if {${FAST}} {
     set PLACE_DIRECTIVE "RuntimeOptimized"
     set PHYS_DIRECTIVE "RuntimeOptimized"
     set ROUTE_DIRECTIVE "RuntimeOptimized"
+} elseif {${PERF}} {
+    set SYNTH_DIRECTIVE "PerformanceOptimized"
+    set OPT_DIRECTIVE "Explore"
+    set PLACE_DIRECTIVE "ExtraTimingOpt"
+    set PHYS_DIRECTIVE "AggressiveExplore"
+    set ROUTE_DIRECTIVE "HigherDelayCost"
 }
 
 set QUIET {}

@@ -38,7 +38,15 @@ if {${SYNTH_CHECKPOINT} == false && ${PNR_CHECKPOINT} == false} {
 
 if {${PNR_CHECKPOINT} == false} {
     place_design {*}${QUIET} -directive ${PLACE_DIRECTIVE}
-    phys_opt_design {*}${QUIET} -directive ${PHYS_DIRECTIVE}
+    if {${PERF}} {
+        for {set i 0} {$i < 5} {incr i} {
+            phys_opt_design {*}${QUIET} -directive AggressiveExplore
+            phys_opt_design {*}${QUIET} -directive AggressiveFanoutOpt
+            phys_opt_design {*}${QUIET} -directive AlternateReplication
+        }
+    } else {
+        phys_opt_design {*}${QUIET} -directive ${PHYS_DIRECTIVE}
+    }
     route_design {*}${QUIET} -directive ${ROUTE_DIRECTIVE}
     write_checkpoint -force ${PROJECT_NAME}_pnr.dcp
 } else {
