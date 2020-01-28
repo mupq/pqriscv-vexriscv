@@ -44,6 +44,13 @@ if {![file exists "${PROJECT_NAME}.tcl"]} {
     exit 1
 }
 
+set MAXDSPS [has_arg_with_param ${argv} "-dsp_limit"]
+if {${MAXDSPS} == false} {
+    set MAXDSPS -1
+} else {
+    scan ${MAXDSPS} %d MAXDSPS
+}
+
 # The sourced script should set the following variables
 # SOURCES: List of source files
 # CONSTRAINTS: List of constraint files

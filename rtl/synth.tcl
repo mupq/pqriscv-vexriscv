@@ -10,7 +10,7 @@ lappend SYNTH_ARGS -resource_sharing auto
 lappend SYNTH_ARGS -control_set_opt_threshold auto
 lappend SYNTH_ARGS -shreg_min_size { 5 }
 lappend SYNTH_ARGS -max_bram { -1 }
-lappend SYNTH_ARGS -max_dsp { -1 }
+lappend SYNTH_ARGS -max_dsp ${MAXDSPS}
 lappend SYNTH_ARGS -cascade_dsp auto
 lappend SYNTH_ARGS -directive ${SYNTH_DIRECTIVE}
 lappend SYNTH_ARGS -top ${TOPLEVEL}
