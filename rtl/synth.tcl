@@ -46,7 +46,7 @@ if {${PNR_CHECKPOINT} == false} {
 }
 
 report_timing_summary -file ${PROJECT_NAME}.time
-report_utilization -file ${PROJECT_NAME}.util
+report_utilization -hierarchical -file ${PROJECT_NAME}.util
 
 if {${WRITE_MCS} == true} {
     set_property CONFIG_MODE ${FLASH_INTERFACE} [current_design]
