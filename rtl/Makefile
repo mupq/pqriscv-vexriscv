@@ -47,7 +47,7 @@ PQVexRiscvIcoboard.asc: DEVICE=hx8k
 
 PQVexRiscvArtyA7.v: GENERATOR_NAME=PQVexRiscvArty
 PQVexRiscvArtyS7.v: GENERATOR_NAME=PQVexRiscvArty
-PQVexRiscvArtyA7.v: GENERATOR_FLAGS=--mul
+PQVexRiscvArtyA7.v: GENERATOR_FLAGS=--mul --core 125
 PQVexRiscvArtyS7.v: GENERATOR_FLAGS=--mul
 
 BOARD = $*
