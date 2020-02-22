@@ -76,9 +76,13 @@ abstract class PQVexRiscv(
     var dbus : PipelinedMemoryBus = PipelinedMemoryBus(busConfig)
     for (plugin <- cpu.plugins) plugin match {
       case plugin: IBusSimplePlugin =>
-        ibus << plugin.iBus.toPipelinedMemoryBus()
+        val cpuibus = plugin.iBus.toPipelinedMemoryBus()
+        ibus.cmd <-/< cpuibus.cmd
+        ibus.rsp >> cpuibus.rsp
       case plugin: DBusSimplePlugin =>
-        dbus << plugin.dBus.toPipelinedMemoryBus()
+        val cpudbus = plugin.dBus.toPipelinedMemoryBus()
+        dbus.cmd <-/< cpudbus.cmd
+        dbus.rsp >> cpudbus.rsp
         plugin.dBus.rsp.error := False
       case plugin: CsrPlugin =>
         plugin.externalInterrupt := externalInterrupt
@@ -174,7 +178,7 @@ abstract class PQVexRiscv(
     assert(!SizeMapping.verifyOverlapping(busSlaves.map(_._2)))
     val crossbar = new ClockingArea(systemClockDomain) {
       val interconnect = new PipelinedMemoryBusInterconnect()
-      interconnect.areaConfig()
+      interconnect.perfConfig()
       /* Setup the interconnect */
       interconnect.addSlaves(busSlaves: _*)
       /* Check which masters overlap with which slaves */
