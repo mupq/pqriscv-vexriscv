@@ -92,7 +92,8 @@ object PQVexRiscvSim {
     case class PQVexRiscvSimConfig(
       uartOutFile: OutputStream = System.out,
       initFile: File = null,
-      ramBlocks: Seq[BigInt] = Seq(256 KiB, 128 KiB)
+      ramBlocks: Seq[BigInt] = Seq(256 KiB, 128 KiB),
+      cpuPlugins: Seq[Plugin[VexRiscv]] = PQVexRiscv.withDSPMultiplier
     )
     val optParser = new OptionParser[PQVexRiscvSimConfig]("PQVexRiscvSim") {
       head("PQVexRiscvSim simulator")
@@ -108,7 +109,7 @@ object PQVexRiscvSim {
     }
 
     val compiled = SimConfig.allOptimisation.compile {
-      new PQVexRiscvSim(config.ramBlocks, config.initFile)
+      new PQVexRiscvSim(config.ramBlocks, config.initFile, cpuPlugins=config.cpuPlugins)
     }
 
     compiled.doSim("PqVexRiscvSim", 42) { dut =>
