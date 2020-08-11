@@ -95,7 +95,7 @@ class PipelinedMemoryBusSRAM(busConfig: PipelinedMemoryBusConfig) extends Compon
 
 class PQVexRiscvIcoboard(
   val coreFrequency : HertzNumber = 20 MHz,
-  cpuPlugins : Seq[Plugin[VexRiscv]] = PQVexRiscv.withSmallMultiplier
+  cpuPlugins : () => Seq[Plugin[VexRiscv]] = PQVexRiscv.withSmallMultiplier()
 ) extends PQVexRiscv(
   cpuPlugins = cpuPlugins,
   ibusRange = SizeMapping(0x80000000l, 1 MiB),

@@ -52,7 +52,7 @@ class PQVexRiscvArty(
   val ramBlockSizes : Seq[BigInt] = Seq[BigInt](64 KiB, 64 KiB),
   val clkFrequency : HertzNumber = 100 MHz,
   val coreFrequency : HertzNumber = 50 MHz,
-  cpuPlugins : Seq[Plugin[VexRiscv]] = PQVexRiscv.withDSPMultiplier
+  cpuPlugins : () => Seq[Plugin[VexRiscv]] = PQVexRiscv.withDSPMultiplier()
 ) extends PQVexRiscv (
   cpuPlugins = cpuPlugins,
   ibusRange = SizeMapping(0x80000000l, ramBlockSizes.reduce(_ + _))
@@ -112,7 +112,7 @@ object PQVexRiscvArty {
       ramBlocks: Seq[BigInt] = Seq(64 KiB, 64 KiB),
       clkFrequency: HertzNumber = 100 MHz,
       coreFrequency: HertzNumber = 50 MHz,
-      cpuPlugins: Seq[Plugin[VexRiscv]] = PQVexRiscv.baseConfig
+      cpuPlugins: () => Seq[Plugin[VexRiscv]] = PQVexRiscv.baseConfig()
     )
     val optParser = new OptionParser[PQVexRiscvArtyConfig]("PQVexRiscvArty") {
       head("PQVexRiscvArty board")
@@ -120,7 +120,7 @@ object PQVexRiscvArty {
       opt[Seq[Int]]("ram") action((r, c) => c.copy(ramBlocks = r.map(_ KiB))) text("SRAM Blocks in KiB") valueName("<block1>,<block2>")
       opt[Int]("clk") action((r, c) => c.copy(clkFrequency = (r MHz))) text("Input clock freqency in MHz") valueName("<freq>")
       opt[Int]("core") action((r, c) => c.copy(coreFrequency = (r MHz))) text("Target core freqency in MHz") valueName("<freq>")
-      opt[Unit]("mul") action((_, c) => c.copy(cpuPlugins = c.cpuPlugins ++ PQVexRiscv.dspMultiplier))
+      opt[Unit]("mul") action((_, c) => c.copy(cpuPlugins = PQVexRiscv.withDSPMultiplier(c.cpuPlugins)))
     }
     val config = optParser.parse(args, PQVexRiscvArtyConfig()) match {
       case Some(config) => config

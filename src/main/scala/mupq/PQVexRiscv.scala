@@ -16,7 +16,7 @@ import vexriscv.demo.MuraxApb3Timer
 import vexriscv.plugin._
 
 abstract class PQVexRiscv(
-  cpuPlugins : Seq[Plugin[VexRiscv]],
+  cpuPlugins : () => Seq[Plugin[VexRiscv]],
   ibusRange : SizeMapping,
   genUART : Boolean = true,
   gpioWidth : Int = 0,
@@ -68,7 +68,7 @@ abstract class PQVexRiscv(
     val externalInterrupt = False
 
     val config = VexRiscvConfig(
-      plugins = cpuPlugins ++ Seq(new DebugPlugin(debugClockDomain, 3)))
+      plugins = cpuPlugins() ++ Seq(new DebugPlugin(debugClockDomain, 3)))
 
     val cpu = new VexRiscv(config)
     /* Wire the Busses / Lines to the plugins */
@@ -192,8 +192,11 @@ abstract class PQVexRiscv(
 
 object PQVexRiscv
 {
+  type PluginSeq = Seq[Plugin[VexRiscv]]
+  type PluginGen = () => PluginSeq
+
   /** Basic set of Plugins (conforms mostly to rv32i) */
-  def baseConfig: Seq[Plugin[VexRiscv]] = Seq(
+  def baseConfig(base: PluginGen = () => Seq()) = () => base() ++ Seq(
     new IBusSimplePlugin(
       resetVector = 0x80000000l,
       cmdForkOnSecondStage = true,
@@ -254,7 +257,7 @@ object PQVexRiscv
   )
 
   /** Config with a small multiplier */
-  def withSmallMultiplier = baseConfig ++ smallMultiplier
+  def withSmallMultiplier(base: PluginGen = baseConfig()) = () => base() ++ smallMultiplier
 
   /** Plugins for a multiplier for FPGAs */
   def dspMultiplier = Seq(
@@ -267,5 +270,5 @@ object PQVexRiscv
   )
 
   /** Config with a multiplier for FPGAs */
-  def withDSPMultiplier = baseConfig ++ dspMultiplier
+  def withDSPMultiplier(base: PluginGen = baseConfig()) = () => base() ++ dspMultiplier
 }

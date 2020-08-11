@@ -50,7 +50,7 @@ class PipelinedMemoryBusSPRAM(busConfig: PipelinedMemoryBusConfig) extends Compo
 
 class PQVexRiscvUP5K(
   val coreFrequency : HertzNumber = 12 MHz,
-  cpuPlugins : Seq[Plugin[VexRiscv]] = PQVexRiscv.withDSPMultiplier
+  cpuPlugins : () => Seq[Plugin[VexRiscv]] = PQVexRiscv.withDSPMultiplier()
 ) extends PQVexRiscv(
   cpuPlugins = cpuPlugins,
   ibusRange = SizeMapping(0x80000000l, 128 KiB)
@@ -99,12 +99,12 @@ class PQVexRiscvUP5K(
 object PQVexRiscvUP5K {
   def main(args: Array[String]) : Unit = {
     case class PQVexRiscvUP5KConfig(
-      cpuPlugins: Seq[Plugin[VexRiscv]] = PQVexRiscv.baseConfig
+      cpuPlugins: () => Seq[Plugin[VexRiscv]] = PQVexRiscv.baseConfig()
     )
     val optParser = new OptionParser[PQVexRiscvUP5KConfig]("PQVexRiscvUP5K") {
       head("PQVexRiscvUP5K board")
       help("help") text("print usage text")
-      opt[Unit]("mul") action((_, c) => c.copy(cpuPlugins = c.cpuPlugins ++ PQVexRiscv.dspMultiplier))
+      opt[Unit]("mul") action((_, c) => c.copy(cpuPlugins = PQVexRiscv.withDSPMultiplier(c.cpuPlugins)))
     }
     val config = optParser.parse(args, PQVexRiscvUP5KConfig()) match {
       case Some(config) => config
