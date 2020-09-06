@@ -28,14 +28,15 @@ case class PipelinedMemoryBusRam(size : BigInt, initialContent : File = null) ex
   }
 
   val ram = Mem(Bits(32 bits), size / 4)
-  io.bus.rsp.valid := RegNext(io.bus.cmd.fire && !io.bus.cmd.write) init(False)
-  io.bus.rsp.data := ram.readWriteSync(
+  io.bus.rsp.valid := Delay(io.bus.cmd.fire && !io.bus.cmd.write, 2, init=False)
+  val rdata = ram.readWriteSync(
     address = io.bus.cmd.address >> 2,
     data  = io.bus.cmd.data,
     enable  = io.bus.cmd.valid,
     write  = io.bus.cmd.write,
     mask  = io.bus.cmd.mask
   )
+  io.bus.rsp.data := RegNext(rdata) init(0)
   io.bus.cmd.ready := True
 
   if (initialContent != null) {

@@ -97,7 +97,7 @@ class PQVexRiscvArty(
   io.TXD := uart.txd
 
   val memory = new ClockingArea(systemClockDomain) {
-    val ramBlocks = ramBlockSizes.zipWithIndex.map(t => PipelinedMemoryBusXilinxRam(t._1))
+    val ramBlocks = ramBlockSizes.zipWithIndex.map(t => PipelinedMemoryBusXilinxRam(t._1, 2))
     var curAddr : BigInt = 0x80000000l
     for (block <- ramBlocks) {
       busSlaves += block.io.bus -> SizeMapping(curAddr, block.size)

@@ -44,8 +44,8 @@ class PipelinedMemoryBusSPRAM(busConfig: PipelinedMemoryBusConfig) extends Compo
   io.bus.cmd.ready := True
 
   /* Memory is synchronous, so response is ready one cycle later */
-  io.bus.rsp.valid := RegNext(io.bus.cmd.fire && !io.bus.cmd.write) init (False)
-  io.bus.rsp.data := rams(1).io.DATAOUT ## rams(0).io.DATAOUT
+  io.bus.rsp.valid := Delay(io.bus.cmd.fire && !io.bus.cmd.write, 2, init = False)
+  io.bus.rsp.data := Delay(rams(1).io.DATAOUT ## rams(0).io.DATAOUT, 1, init = B(0))
 }
 
 class PQVexRiscvUP5K(
