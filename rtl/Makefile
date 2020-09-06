@@ -19,16 +19,19 @@ GENERATED_FILE = $(GENERATOR_NAME).v
 .SECONDEXPANSION:
 
 %.v: ../build.sbt $(SCALA_SOURCES)
+	[ -d gen ] || mkdir -p gen
 	cd ../;	sbt "runMain mupq.$(GENERATOR_NAME) $(GENERATOR_FLAGS)"
-	if [ "$(GENERATED_FILE)" != "$@" ]; then \
-		mv $(GENERATED_FILE) $@; \
+	mv gen/$(GENERATED_FILE) $@
+	if [ -e "gen/$(GENERATED_FILE:.v=.aux.v)" ]; then \
+		cat "gen/$(GENERATED_FILE:.v=.aux.v)" >> $@; \
+		rm "gen/$(GENERATED_FILE:.v=.aux.v)"; \
 	fi
-
+	find gen/ -name *.gen -exec mv -t ./ {} +
 
 TOPLEVEL_MODULE = $*
 
 %.json %_yosys.log: %.v
-	$(YOSYS) -q -l $*_yosys.log -p "synth_ice40 -top $(TOPLEVEL_MODULE) -json $@ $(YOSYSFLAGS)" $<
+	$(YOSYS) -q -l $*_yosys.log -p "synth_ice40 -top $(TOPLEVEL_MODULE) -json $@ $(YOSYSFLAGS)" $(filter %.v,$^)
 
 PCF_FILE = $*.pcf
 
@@ -51,9 +54,10 @@ PQVexRiscvArtyA7.v: GENERATOR_FLAGS=--mul --core 125
 PQVexRiscvArtyS7.v: GENERATOR_FLAGS=--mul
 
 BOARD = $*
+XILINX_OUTPUT_NAME = $(BOARD)
 
 %.mcs %.time %.util: %.v $$(BOARD).tcl synth.tcl args.tcl
-	vivado -nojournal -nolog -mode batch -source synth.tcl -tclargs -board $(BOARD) $(XILINX_SYNTH_ARGS)
+	vivado -nojournal -nolog -mode batch -source synth.tcl -tclargs -board $(BOARD) -out $(XILINX_OUTPUT_NAME) $(XILINX_SYNTH_ARGS)
 
 clean:
 	rm -f *.asc *.bit *.json *.log *.v *.dcp *.mcs *.util *.time
