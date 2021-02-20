@@ -2,13 +2,15 @@ ThisBuild / organization := "mupq"
 
 ThisBuild / scalaVersion := "2.11.12"
 
+val spinalVersion = "1.4.3"
+
 lazy val pqvexriscv = (project in file("."))
   .settings(
     name := "pqvexriscv",
     version := "0.1",
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-      compilerPlugin("com.github.spinalhdl" % "spinalhdl-idsl-plugin_2.11" % "1.4.0")
+      compilerPlugin("com.github.spinalhdl" % "spinalhdl-idsl-plugin_2.11" % spinalVersion)
     ),
     run / connectInput := true,
     outputStrategy := Some(StdoutOutput),
