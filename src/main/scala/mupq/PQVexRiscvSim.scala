@@ -19,28 +19,28 @@ import spinal.lib.com.jtag.sim.JtagTcp
 import vexriscv.VexRiscv
 import vexriscv.plugin.Plugin
 
-case class PipelinedMemoryBusRam(size : BigInt, initialContent : File = null) extends Component{
+case class PipelinedMemoryBusRam(size: BigInt, initialContent: File = null) extends Component {
   require(size % 4 == 0, "Size must be multiple of 4 bytes")
   require(size > 0, "Size must be greater than zero")
   val busConfig = PipelinedMemoryBusConfig(log2Up(size), 32)
-  val io = new Bundle{
+  val io = new Bundle {
     val bus = slave(PipelinedMemoryBus(busConfig))
   }
 
   val ram = Mem(Bits(32 bits), size / 4)
-  io.bus.rsp.valid := Delay(io.bus.cmd.fire && !io.bus.cmd.write, 2, init=False)
+  io.bus.rsp.valid := Delay(io.bus.cmd.fire && !io.bus.cmd.write, 2, init = False)
   val rdata = ram.readWriteSync(
     address = io.bus.cmd.address >> 2,
-    data  = io.bus.cmd.data,
-    enable  = io.bus.cmd.valid,
-    write  = io.bus.cmd.write,
-    mask  = io.bus.cmd.mask
+    data = io.bus.cmd.data,
+    enable = io.bus.cmd.valid,
+    write = io.bus.cmd.write,
+    mask = io.bus.cmd.mask
   )
-  io.bus.rsp.data := RegNext(rdata) init(0)
+  io.bus.rsp.data := RegNext(rdata) init (0)
   io.bus.cmd.ready := True
 
   if (initialContent != null) {
-    val input = new FileInputStream(initialContent)
+    val input       = new FileInputStream(initialContent)
     val initContent = Array.fill[BigInt](ram.wordCount)(0)
     val fileContent = Array.ofDim[Byte](Seq(input.available, initContent.length * 4).min)
     input.read(fileContent)
@@ -52,23 +52,21 @@ case class PipelinedMemoryBusRam(size : BigInt, initialContent : File = null) ex
   }
 }
 
-
-
-
 class PQVexRiscvSim(
-  val ramBlockSizes : Seq[BigInt] = Seq[BigInt](256 KiB, 128 KiB),
-  val initialContent : File = null,
-  val coreFrequency : HertzNumber = 12 MHz,
-  cpuPlugins : () => Seq[Plugin[VexRiscv]] = PQVexRiscv.withDSPMultiplier()
-) extends PQVexRiscv(
+  val ramBlockSizes: Seq[BigInt] = Seq[BigInt](256 KiB, 128 KiB),
+  val initialContent: File = null,
+  val coreFrequency: HertzNumber = 12 MHz,
+  cpuPlugins: () => Seq[Plugin[VexRiscv]] = PQVexRiscv.withDSPMultiplier()
+)
+extends PQVexRiscv(
   cpuPlugins = cpuPlugins,
-  ibusRange = SizeMapping(0x80000000l, ramBlockSizes.reduce(_ + _))
+  ibusRange = SizeMapping(0x80000000L, ramBlockSizes.reduce(_ + _))
 ) {
   val io = new Bundle {
     val asyncReset = in Bool
-    val mainClock = in Bool
-    val uart = master(Uart())
-    val jtag = slave(Jtag())
+    val mainClock  = in Bool
+    val uart       = master(Uart())
+    val jtag       = slave(Jtag())
   }
 
   asyncReset := io.asyncReset
@@ -78,8 +76,10 @@ class PQVexRiscvSim(
   jtag <> io.jtag
 
   val memory = new ClockingArea(systemClockDomain) {
-    val ramBlocks = ramBlockSizes.zipWithIndex.map(t => PipelinedMemoryBusRam(t._1, if (t._2 == 0) initialContent else null))
-    var curAddr : BigInt = 0x80000000l
+    val ramBlocks =
+      ramBlockSizes.zipWithIndex.map(t =>
+        PipelinedMemoryBusRam(t._1, if (t._2 == 0) initialContent else null))
+    var curAddr: BigInt = 0x80000000L
     for (block <- ramBlocks) {
       busSlaves += block.io.bus -> SizeMapping(curAddr, block.size)
       curAddr += block.size
@@ -98,25 +98,36 @@ object PQVexRiscvSim {
     )
     val optParser = new OptionParser[PQVexRiscvSimConfig]("PQVexRiscvSim") {
       head("PQVexRiscvSim simulator")
-      help("help") text("print usage text")
-      opt[File]("uart") action((f, c) => c.copy(uartOutFile = new FileOutputStream(f, true))) text("File for UART output (will be appended)") valueName("<output>")
-      opt[File]("init") action((f, c) => c.copy(initFile = f)) text("Initialization file for first RAM block") valueName("<bin>")
-      opt[Seq[Int]]("ram") action((r, c) => c.copy(ramBlocks = r.map(_ KiB))) text("SRAM Blocks in KiB") valueName("<block1>,<block2>")
+      help("help") text ("print usage text")
+      opt[File]("uart") action ((f, c) =>
+        c.copy(uartOutFile =
+          new FileOutputStream(
+            f,
+            true))) text ("File for UART output (will be appended)") valueName ("<output>")
+      opt[File]("init") action ((f, c) =>
+        c.copy(initFile = f)) text ("Initialization file for first RAM block") valueName ("<bin>")
+      opt[Seq[Int]]("ram") action ((r, c) =>
+        c.copy(ramBlocks =
+          r.map(_ KiB))) text ("SRAM Blocks in KiB") valueName ("<block1>,<block2>")
     }
 
     val config = optParser.parse(args, PQVexRiscvSimConfig()) match {
       case Some(config) => config
-      case None => ???
+      case None         => ???
     }
 
     val compiled = SimConfig.allOptimisation.compile {
-      new PQVexRiscvSim(config.ramBlocks, config.initFile, cpuPlugins=config.cpuPlugins)
+      new PQVexRiscvSim(
+        config.ramBlocks,
+        config.initFile,
+        cpuPlugins = config.cpuPlugins
+      )
     }
 
     compiled.doSim("PqVexRiscvSim", 42) { dut =>
-      val mainClkPeriod = (1e12 / dut.coreFrequency.toDouble).toLong
-      val jtagClkPeriod = mainClkPeriod * 4
-      val uartBaudRate = 115200
+      val mainClkPeriod  = (1e12 / dut.coreFrequency.toDouble).toLong
+      val jtagClkPeriod  = mainClkPeriod * 4
+      val uartBaudRate   = 115200
       val uartBaudPeriod = (1e12 / uartBaudRate.toDouble).toLong
 
       val clockDomain = ClockDomain(dut.io.mainClock, dut.io.asyncReset)
@@ -143,7 +154,7 @@ object PQVexRiscvSim {
             } else {
               sleep(uartBaudPeriod)
               var byte = 0
-              var i = 0
+              var i    = 0
               while (i < 8) {
                 if (uartPin.toBoolean) {
                   byte |= 1 << i

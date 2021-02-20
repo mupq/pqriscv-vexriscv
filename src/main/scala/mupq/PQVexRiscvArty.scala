@@ -19,11 +19,11 @@ import spinal.lib.com.jtag.sim.JtagTcp
 import vexriscv.VexRiscv
 import vexriscv.plugin.Plugin
 
-case class PipelinedMemoryBusXilinxRam(size : BigInt, latency : Int = 1) extends Component{
+case class PipelinedMemoryBusXilinxRam(size: BigInt, latency: Int = 1) extends Component {
   require(size % 4 == 0, "Size must be multiple of 4 bytes")
   require(size > 0, "Size must be greater than zero")
   val busConfig = PipelinedMemoryBusConfig(log2Up(size), 32)
-  val io = new Bundle{
+  val io = new Bundle {
     val bus = slave(PipelinedMemoryBus(busConfig))
   }
 
@@ -31,7 +31,8 @@ case class PipelinedMemoryBusXilinxRam(size : BigInt, latency : Int = 1) extends
     dataWidth = 32,
     numWords = size / 4,
     readLatency = latency,
-    byteWrite = true)
+    byteWrite = true
+  )
 
   ram.io.dina := io.bus.cmd.data
   ram.io.addra := io.bus.cmd.address.asBits >> 2
@@ -47,27 +48,27 @@ case class PipelinedMemoryBusXilinxRam(size : BigInt, latency : Int = 1) extends
   io.bus.rsp.data := ram.io.douta
 }
 
-
 class PQVexRiscvArty(
-  val ramBlockSizes : Seq[BigInt] = Seq[BigInt](64 KiB, 64 KiB),
-  val clkFrequency : HertzNumber = 100 MHz,
-  val coreFrequency : HertzNumber = 50 MHz,
-  cpuPlugins : () => Seq[Plugin[VexRiscv]] = PQVexRiscv.withDSPMultiplier()
-) extends PQVexRiscv (
+  val ramBlockSizes: Seq[BigInt] = Seq[BigInt](64 KiB, 64 KiB),
+  val clkFrequency: HertzNumber = 100 MHz,
+  val coreFrequency: HertzNumber = 200 MHz,
+  cpuPlugins: () => Seq[Plugin[VexRiscv]] = PQVexRiscv.withDSPMultiplier()
+)
+extends PQVexRiscv(
   cpuPlugins = cpuPlugins,
-  ibusRange = SizeMapping(0x80000000l, ramBlockSizes.reduce(_ + _))
+  ibusRange = SizeMapping(0x80000000L, ramBlockSizes.reduce(_ + _))
 ) {
   val io = new Bundle {
     val RST = in Bool
     val CLK = in Bool
     /* UART */
     val TXD = out Bool // TXD
-    val RXD = in Bool // RXD
+    val RXD = in Bool  // RXD
     /* JTAG */
     val TDO = out Bool // TDO
-    val TCK = in Bool // TCK
-    val TDI = in Bool // TDI
-    val TMS = in Bool // TMS
+    val TCK = in Bool  // TCK
+    val TDI = in Bool  // TDI
+    val TMS = in Bool  // TMS
   }
   noIoPrefix()
 
@@ -97,8 +98,8 @@ class PQVexRiscvArty(
   io.TXD := uart.txd
 
   val memory = new ClockingArea(systemClockDomain) {
-    val ramBlocks = ramBlockSizes.zipWithIndex.map(t => PipelinedMemoryBusXilinxRam(t._1, 2))
-    var curAddr : BigInt = 0x80000000l
+    val ramBlocks       = ramBlockSizes.zipWithIndex.map(t => PipelinedMemoryBusXilinxRam(t._1, 2))
+    var curAddr: BigInt = 0x80000000L
     for (block <- ramBlocks) {
       busSlaves += block.io.bus -> SizeMapping(curAddr, block.size)
       curAddr += block.size
@@ -107,28 +108,42 @@ class PQVexRiscvArty(
 }
 
 object PQVexRiscvArty {
-  def main(args: Array[String]) : Unit = {
+  def main(args: Array[String]): Unit = {
     case class PQVexRiscvArtyConfig(
       ramBlocks: Seq[BigInt] = Seq(64 KiB, 64 KiB),
       clkFrequency: HertzNumber = 100 MHz,
-      coreFrequency: HertzNumber = 50 MHz,
+      coreFrequency: HertzNumber = 300 MHz,
       cpuPlugins: () => Seq[Plugin[VexRiscv]] = PQVexRiscv.baseConfig()
     )
     val optParser = new OptionParser[PQVexRiscvArtyConfig]("PQVexRiscvArty") {
       head("PQVexRiscvArty board")
-      help("help") text("print usage text")
-      opt[Seq[Int]]("ram") action((r, c) => c.copy(ramBlocks = r.map(_ KiB))) text("SRAM Blocks in KiB") valueName("<block1>,<block2>")
-      opt[Int]("clk") action((r, c) => c.copy(clkFrequency = (r MHz))) text("Input clock freqency in MHz") valueName("<freq>")
-      opt[Int]("core") action((r, c) => c.copy(coreFrequency = (r MHz))) text("Target core freqency in MHz") valueName("<freq>")
-      opt[Unit]("mul") action((_, c) => c.copy(cpuPlugins = PQVexRiscv.withDSPMultiplier(c.cpuPlugins)))
+      help("help") text ("print usage text")
+      opt[Seq[Int]]("ram") action ((r, c) =>
+        c.copy(ramBlocks =
+          r.map(_ KiB))) text ("SRAM Blocks in KiB") valueName ("<block1>,<block2>")
+      opt[Int]("clk") action ((r, c) =>
+        c.copy(clkFrequency = (r MHz))) text ("Input clock freqency in MHz") valueName ("<freq>")
+      opt[Int]("core") action ((r, c) =>
+        c.copy(coreFrequency = (r MHz))) text ("Target core freqency in MHz") valueName ("<freq>")
+      opt[Unit]("mul") action ((_, c) =>
+        c.copy(cpuPlugins = PQVexRiscv.withDSPMultiplier(c.cpuPlugins)))
     }
     val config = optParser.parse(args, PQVexRiscvArtyConfig()) match {
       case Some(config) => config
-      case None => ???
+      case None         => ???
     }
-    SpinalConfig(
+    val report = SpinalConfig(
       mode = Verilog,
-      targetDirectory = "rtl"
-    ).generate(new PQVexRiscvArty(ramBlockSizes = config.ramBlocks, clkFrequency = config.clkFrequency, coreFrequency = config.coreFrequency, cpuPlugins = config.cpuPlugins))
+      targetDirectory = "rtl/gen"
+    ).generate(
+      new PQVexRiscvArty(
+        ramBlockSizes = config.ramBlocks,
+        clkFrequency = config.clkFrequency,
+        coreFrequency = config.coreFrequency,
+        cpuPlugins = config.cpuPlugins
+      )
+    )
+    println(s"Core freqency is set to ${config.coreFrequency.toDouble / 1e6} MHz")
+    report.mergeRTLSource(s"rtl/gen/${report.toplevelName}.aux")
   }
 }

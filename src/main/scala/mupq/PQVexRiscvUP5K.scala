@@ -18,10 +18,10 @@ class PipelinedMemoryBusSPRAM(busConfig: PipelinedMemoryBusConfig) extends Compo
 
   /* Tie together two RAMS to get 32-bit width */
   val rams: Array[Ice40SPRAM] = (0 to 1).map(_ => new Ice40SPRAM).toArray
-  val enable = io.bus.cmd.valid
-  val mask = io.bus.cmd.mask
+  val enable                  = io.bus.cmd.valid
+  val mask                    = io.bus.cmd.mask
   /* Fan out the simple byte mask of the bus to bit masks */
-  val maskLow = mask(1) ## mask(1) ## mask(0) ## mask(0)
+  val maskLow  = mask(1) ## mask(1) ## mask(0) ## mask(0)
   val maskHigh = mask(3) ## mask(3) ## mask(2) ## mask(2)
   for ((ram, i) <- rams.zipWithIndex) {
     /* Don't ever sleep */
@@ -49,22 +49,23 @@ class PipelinedMemoryBusSPRAM(busConfig: PipelinedMemoryBusConfig) extends Compo
 }
 
 class PQVexRiscvUP5K(
-  val coreFrequency : HertzNumber = 12 MHz,
-  cpuPlugins : () => Seq[Plugin[VexRiscv]] = PQVexRiscv.withDSPMultiplier()
-) extends PQVexRiscv(
+  val coreFrequency: HertzNumber = 12 MHz,
+  cpuPlugins: () => Seq[Plugin[VexRiscv]] = PQVexRiscv.withDSPMultiplier()
+)
+extends PQVexRiscv(
   cpuPlugins = cpuPlugins,
-  ibusRange = SizeMapping(0x80000000l, 128 KiB)
+  ibusRange = SizeMapping(0x80000000L, 128 KiB)
 ) {
   val io = new Bundle {
     val ice_clk = in Bool
     /* UART */
     val iob_8a = out Bool // TXD
-    val iob_9b = in Bool // RXD
+    val iob_9b = in Bool  // RXD
     /* JTAG */
-    val iob_23b = out Bool // TDO
-    val iob_25b_g3 = in Bool // TCK
-    val iob_24a = in Bool // TDI
-    val iob_29b = in Bool // TMS
+    val iob_23b    = out Bool // TDO
+    val iob_25b_g3 = in Bool  // TCK
+    val iob_24a    = in Bool  // TDI
+    val iob_29b    = in Bool  // TMS
   }
   asyncReset := False
   mainClock := io.ice_clk
@@ -90,29 +91,35 @@ class PQVexRiscvUP5K(
 
   val memory = new ClockingArea(systemClockDomain) {
     val ram1 = new PipelinedMemoryBusSPRAM(busConfig)
-    busSlaves += ram1.io.bus -> SizeMapping(0x80000000l, 64 KiB)
+    busSlaves += ram1.io.bus -> SizeMapping(0x80000000L, 64 KiB)
     val ram2 = new PipelinedMemoryBusSPRAM(busConfig)
-    busSlaves += ram2.io.bus -> SizeMapping(0x80000000l + (64 KiB).toLong, 64 KiB)
+    busSlaves += ram2.io.bus -> SizeMapping(0x80000000L + (64 KiB).toLong, 64 KiB)
   }
 }
 
 object PQVexRiscvUP5K {
-  def main(args: Array[String]) : Unit = {
+  def main(args: Array[String]): Unit = {
     case class PQVexRiscvUP5KConfig(
       cpuPlugins: () => Seq[Plugin[VexRiscv]] = PQVexRiscv.baseConfig()
     )
     val optParser = new OptionParser[PQVexRiscvUP5KConfig]("PQVexRiscvUP5K") {
       head("PQVexRiscvUP5K board")
-      help("help") text("print usage text")
-      opt[Unit]("mul") action((_, c) => c.copy(cpuPlugins = PQVexRiscv.withDSPMultiplier(c.cpuPlugins)))
+      help("help") text ("print usage text")
+      opt[Unit]("mul") action ((_, c) =>
+        c.copy(cpuPlugins = PQVexRiscv.withDSPMultiplier(c.cpuPlugins)))
     }
     val config = optParser.parse(args, PQVexRiscvUP5KConfig()) match {
       case Some(config) => config
-      case None => ???
+      case None         => ???
     }
-    SpinalConfig(
+    val report = SpinalConfig(
       mode = Verilog,
-      targetDirectory = "rtl"
-    ).generate(new PQVexRiscvUP5K(cpuPlugins = config.cpuPlugins))
+      targetDirectory = "rtl/gen"
+    ).generate(
+      new PQVexRiscvUP5K(
+        cpuPlugins = config.cpuPlugins
+      )
+    )
+    report.mergeRTLSource(s"rtl/gen/${report.toplevelName}.aux")
   }
 }
