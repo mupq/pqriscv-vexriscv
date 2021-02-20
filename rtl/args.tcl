@@ -32,6 +32,12 @@ if {![file exists "${PROJECT_NAME}.tcl"]} {
     exit 1
 }
 
+set CLOCK_FREQ [has_arg_with_param ${argv} -clock]
+if {${CLOCK_FREQ} != false} {
+    set CLOCK_PERIOD [expr  {1.0e9 / (${CLOCK_FREQ} * 1.0e6)}]
+    puts "Clock Frequency set to ${CLOCK_FREQ} MHz (${CLOCK_PERIOD} ns period)"
+}
+
 source "${PROJECT_NAME}.tcl"
 
 set SYNTH_CHECKPOINT [has_arg_with_param ${argv} -synth_dcp]
@@ -50,6 +56,18 @@ set SOURCE_OVERWRITE [has_arg_with_param ${argv} -source]
 if {${SOURCE_OVERWRITE} != false && ![file exists ${SOURCE_OVERWRITE}]} {
     puts "Sources don't exist!"
     exit 1
+} elseif {${SOURCE_OVERWRITE} != false} {
+    puts "Using source file ${SOURCE_OVERWRITE}"
+    set SOURCES [list ${SOURCE_OVERWRITE}]
+}
+
+set CONSTR_OVERWRITE [has_arg_with_param ${argv} -constr]
+if {${CONSTR_OVERWRITE} != false && ![file exists ${CONSTR_OVERWRITE}]} {
+    puts "Constraint file don't exist!"
+    exit 1
+} elseif {${CONSTR_OVERWRITE} != false} {
+    puts "Using constraint file ${CONSTR_OVERWRITE}"
+    set CONSTRAINTS [list ${CONSTR_OVERWRITE}]
 }
 
 set MAXDSPS [has_arg_with_param ${argv} "-dsp_limit"]

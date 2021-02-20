@@ -16,18 +16,21 @@ lappend SYNTH_ARGS -directive ${SYNTH_DIRECTIVE}
 lappend SYNTH_ARGS -top ${TOPLEVEL}
 lappend SYNTH_ARGS -part ${PARTNUMBER}
 
-# set SYNTH_ARGS [join ${SYNTH_ARGS} " "]
-
-if {${SOURCE_OVERWRITE} == false} {
-  foreach src ${SOURCES} {
-      read_verilog $src
-  }
-} else {
-    read_verilog ${SOURCE_OVERWRITE}
+foreach src ${SOURCES} {
+    read_verilog $src
 }
 
 foreach constr ${CONSTRAINTS} {
-    read_xdc $constr
+    if {[string match "*.xdc" $constr]} {
+        puts "Reading managed XDC contraints"
+        read_xdc $constr
+    } elseif {[string match "*.tcl" $constr]} {
+        puts "Reading unmanaged TCL contraints"
+        read_xdc -unmanaged $constr
+    } else {
+        puts "Unknown file format for constraints"
+        exit 1
+    }
 }
 
 auto_detect_xpm

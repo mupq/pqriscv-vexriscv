@@ -28,7 +28,7 @@ GENERATED_FILE = $(GENERATOR_NAME).v
 	fi
 	find gen/ -name *.gen -exec mv -t ./ {} +
 
-TOPLEVEL_MODULE = $*
+TOPLEVEL_MODULE = $(GENERATOR_NAME)
 
 %.json %_yosys.log: %.v
 	$(YOSYS) -q -l $*_yosys.log -p "synth_ice40 -top $(TOPLEVEL_MODULE) -json $@ $(YOSYSFLAGS)" $(filter %.v,$^)
@@ -41,6 +41,15 @@ PCF_FILE = $*.pcf
 %.bit: %.asc
 	$(ICEPACK) $< $@
 
+BOARD = $*
+XILINX_OUTPUT_NAME = $(BOARD)
+
+CORE_FREQ = 100
+CLOCK_FREQ = 100
+CLOCK_PARAMS = \
+	$(if $(CORE_FREQ),--core ${CORE_FREQ}) \
+	$(if $(CLOCK_FREQ),--clk ${CLOCK_FREQ})
+
 PQVexRiscvUP5K.v: GENERATOR_FLAGS=--mul
 PQVexRiscvUP5K.json: YOSYSFLAGS=-dsp
 PQVexRiscvUP5K.asc: PACKAGE=sg48
@@ -50,14 +59,17 @@ PQVexRiscvIcoboard.asc: DEVICE=hx8k
 
 PQVexRiscvArtyA7.v: GENERATOR_NAME=PQVexRiscvArty
 PQVexRiscvArtyS7.v: GENERATOR_NAME=PQVexRiscvArty
-PQVexRiscvArtyA7.v: GENERATOR_FLAGS=--mul --core 125
-PQVexRiscvArtyS7.v: GENERATOR_FLAGS=--mul
+PQVexRiscvArtyA7.v: GENERATOR_FLAGS=--mul $(CLOCK_PARAMS)
+PQVexRiscvArtyS7.v: GENERATOR_FLAGS=--mul $(CLOCK_PARAMS)
 
-BOARD = $*
-XILINX_OUTPUT_NAME = $(BOARD)
-
-%.mcs %.time %.util: %.v $$(BOARD).tcl synth.tcl args.tcl
-	vivado -nojournal -nolog -mode batch -source synth.tcl -tclargs -board $(BOARD) -out $(XILINX_OUTPUT_NAME) $(XILINX_SYNTH_ARGS)
+%.mcs %.time %.util: $$(if $$(SOURCE_FILE),$$(SOURCE_FILE),%.v) $$(BOARD).tcl synth.tcl args.tcl $$(CONSTRAINT_FILE)
+	vivado -nojournal -nolog -mode batch -source synth.tcl -tclargs \
+		-board $(BOARD) \
+		-out $(XILINX_OUTPUT_NAME) \
+		$(if $(CLOCK_FREQ),-clock $(CLOCK_FREQ)) \
+		$(if $(CONSTRAINT_FILE),-constr $(CONSTRAINT_FILE)) \
+		$(if $(SOURCE_FILE),-source $(SOURCE_FILE)) \
+		$(XILINX_SYNTH_ARGS)
 
 clean:
 	rm -f *.asc *.bit *.json *.log *.v *.dcp *.mcs *.util *.time
