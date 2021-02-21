@@ -28,6 +28,8 @@ public class PseudoTerminal {
 
         long ICANON = 0x100;
 
+        void cfmakeraw(TermiosMac temios);
+
         int tcgetattr(int fd, TermiosMac termios);
 
         int tcsetattr(int fd, int cmd, TermiosMac termios);
@@ -52,6 +54,8 @@ public class PseudoTerminal {
         long ECHO = 0x8;
 
         long ICANON = 0x2;
+
+        void cfmakeraw(TermiosLinux temios);
 
         int tcgetattr(int fd, TermiosLinux termios);
 
@@ -104,14 +108,13 @@ public class PseudoTerminal {
         if (Platform.isLinux()) {
             TermiosLinux tmios = new TermiosLinux();
             LibTermiosLinux.INSTANCE.tcgetattr(pts, tmios);
-            tmios.c_lflag &= ~(LibTermiosLinux.ECHO | LibTermiosLinux.ICANON); /* Unset ECHO & ICANON flag */
-            
+            LibTermiosLinux.INSTANCE.cfmakeraw(tmios);
             LibTermiosLinux.INSTANCE.tcsetattr(pts, 0, tmios);
         } else if (Platform.isMac()) {
             /* TODO: Untested */
             TermiosMac tmios = new TermiosMac();
             LibTermiosMac.INSTANCE.tcgetattr(pts, tmios);
-            tmios.c_lflag.setValue(tmios.c_lflag.longValue() & ~(LibTermiosMac.ECHO | LibTermiosMac.ICANON)); /* Unset ECHO flag */
+            LibTermiosMac.INSTANCE.cfmakeraw(tmios);
             LibTermiosMac.INSTANCE.tcsetattr(pts, 0, tmios);
         }
     }
