@@ -9,6 +9,7 @@ lazy val pqvexriscv = (project in file("."))
     name := "pqvexriscv",
     version := "0.1",
     libraryDependencies ++= Seq(
+      "net.java.dev.jna" % "jna" % "5.7.0",
       "org.scalatest" %% "scalatest" % "3.0.5" % "test",
       compilerPlugin("com.github.spinalhdl" % "spinalhdl-idsl-plugin_2.11" % spinalVersion)
     ),
