@@ -198,7 +198,6 @@ object PQVexRiscvSim {
         while (true) {
           val b = pts.readByte()
           if (b != -1) {
-            System.out.write(b);
             uartRxd #= false
             sleep(uartBaudPeriod)
 
