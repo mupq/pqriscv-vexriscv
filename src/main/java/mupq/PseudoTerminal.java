@@ -138,7 +138,7 @@ public class PseudoTerminal {
         byte[] buf = new byte[1];
         int res = LibC.INSTANCE.read(pts, buf, 1);
         if (res == 1) {
-            return buf[0];
+            return ((int) buf[0]) & 0xFF;
         } else {
             return -1;
         }
