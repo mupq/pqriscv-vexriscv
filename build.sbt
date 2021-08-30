@@ -1,8 +1,9 @@
 ThisBuild / organization := "mupq"
 
+// SpinalHDL v1.6.0 can support newer Scala versions, but VexRiscv only references 2.11.12
 ThisBuild / scalaVersion := "2.11.12"
 
-val spinalVersion = "1.4.3"
+val spinalVersion = "1.6.0"
 
 lazy val pqvexriscv = (project in file("."))
   .settings(
@@ -17,7 +18,7 @@ lazy val pqvexriscv = (project in file("."))
     outputStrategy := Some(StdoutOutput),
   ).dependsOn(vexRiscv)
 
-lazy val vexRiscv = RootProject(uri("git://github.com/SpinalHDL/VexRiscv#36b3cd918896c94c4e8a224d97c559ab6dbf3ec9"))
+lazy val vexRiscv = RootProject(uri("git://github.com/SpinalHDL/VexRiscv#5fc4125763a1b66758c387c0abea32e602b2e4e5"))
 
 fork := true
 

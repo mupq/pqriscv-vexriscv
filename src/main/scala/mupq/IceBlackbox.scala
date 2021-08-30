@@ -18,11 +18,11 @@ class Ice40PLLPad(divF: Int, divR: Int, divQ: Int) extends BlackBox {
     val FILTER_RANGE                   = B(0x2, 3 bits)
   }
   val io = new Bundle {
-    val RESETB       = in Bool
-    val BYPASS       = in Bool
-    val PACKAGEPIN   = in Bool
-    val PLLOUTGLOBAL = out Bool
-    val LOCK         = out Bool
+    val RESETB       = in Bool()
+    val BYPASS       = in Bool()
+    val PACKAGEPIN   = in Bool()
+    val PLLOUTGLOBAL = out Bool()
+    val LOCK         = out Bool()
   }
   noIoPrefix()
   setBlackBoxName("SB_PLL40_PAD")
@@ -49,12 +49,12 @@ extends BlackBox {
     val FILTER_RANGE                   = B(0x7, 3 bits)
   }
   val io = new Bundle {
-    val RESETB        = in Bool
-    val BYPASS        = in Bool
-    val REFERENCECLK  = in Bool
-    val PLLOUTGLOBALA = out Bool
-    val PLLOUTGLOBALB = out Bool
-    val LOCK          = out Bool
+    val RESETB        = in Bool()
+    val BYPASS        = in Bool()
+    val REFERENCECLK  = in Bool()
+    val PLLOUTGLOBALA = out Bool()
+    val PLLOUTGLOBALB = out Bool()
+    val LOCK          = out Bool()
   }
   noIoPrefix()
   setBlackBoxName("SB_PLL40_2F_CORE")
@@ -74,10 +74,10 @@ extends BlackBox {
     // val CLOCK_ENABLE = in Bool
     // val INPUT_CLK = in Bool
     // val OUTPUT_CLK = in Bool
-    val OUTPUT_ENABLE = in Bool
-    val D_OUT_0       = in Bool
+    val OUTPUT_ENABLE = in Bool()
+    val D_OUT_0       = in Bool()
     // val D_OUT_1 = in Bool
-    val D_IN_0 = out Bool
+    val D_IN_0 = out Bool()
     // val D_IN_1 = out Bool
   }
   noIoPrefix()
@@ -92,12 +92,12 @@ class Ice40SPRAM extends BlackBox {
     val DATAIN     = in Bits (16 bits)
     val DATAOUT    = out Bits (16 bits)
     val MASKWREN   = in Bits (4 bits)
-    val WREN       = in Bool
-    val CHIPSELECT = in Bool
-    val CLOCK      = in Bool
-    val STANDBY    = in Bool
-    val SLEEP      = in Bool
-    val POWEROFF   = in Bool
+    val WREN       = in Bool()
+    val CHIPSELECT = in Bool()
+    val CLOCK      = in Bool()
+    val STANDBY    = in Bool()
+    val SLEEP      = in Bool()
+    val POWEROFF   = in Bool()
   }
   noIoPrefix()
   mapClockDomain(clock = io.CLOCK)
@@ -130,33 +130,33 @@ class Ice40Multiplier(registerOutput: Boolean = false) extends BlackBox {
   }
 
   val io = new Bundle {
-    val CLK        = in Bool
-    val CE         = in Bool
+    val CLK        = in Bool()
+    val CE         = in Bool()
     val A          = in Bits (16 bits)
-    val AHOLD      = in Bool
+    val AHOLD      = in Bool()
     val B          = in Bits (16 bits)
-    val BHOLD      = in Bool
+    val BHOLD      = in Bool()
     val C          = in Bits (16 bits)
-    val CHOLD      = in Bool
+    val CHOLD      = in Bool()
     val D          = in Bits (16 bits)
-    val DHOLD      = in Bool
-    val IRSTTOP    = in Bool
-    val ORSTTOP    = in Bool
-    val OLOADTOP   = in Bool
-    val ADDSUBTOP  = in Bool
-    val OHOLDTOP   = in Bool
+    val DHOLD      = in Bool()
+    val IRSTTOP    = in Bool()
+    val ORSTTOP    = in Bool()
+    val OLOADTOP   = in Bool()
+    val ADDSUBTOP  = in Bool()
+    val OHOLDTOP   = in Bool()
     val O          = out Bits (32 bits)
-    val IRSTBOT    = in Bool
-    val ORSTBOT    = in Bool
-    val OLOADBOT   = in Bool
-    val ADDSUBBOT  = in Bool
-    val OHOLDBOT   = in Bool
-    val CI         = in Bool
-    val CO         = out Bool
-    val ACCUMCI    = in Bool
-    val ACCUMCO    = out Bool
-    val SIGNEXTIN  = in Bool
-    val SIGNEXTOUT = out Bool
+    val IRSTBOT    = in Bool()
+    val ORSTBOT    = in Bool()
+    val OLOADBOT   = in Bool()
+    val ADDSUBBOT  = in Bool()
+    val OHOLDBOT   = in Bool()
+    val CI         = in Bool()
+    val CO         = out Bool()
+    val ACCUMCI    = in Bool()
+    val ACCUMCO    = out Bool()
+    val SIGNEXTIN  = in Bool()
+    val SIGNEXTOUT = out Bool()
   }
   noIoPrefix()
   mapCurrentClockDomain(io.CLK, enable = io.CE)

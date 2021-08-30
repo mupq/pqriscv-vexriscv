@@ -103,18 +103,18 @@ extends BlackBox {
   }
 
   val io = new Bundle {
-    val CLKFBIN  = in Bool
-    val CLKFBOUT = out Bool
-    val CLKIN1   = in Bool
-    val CLKOUT0  = out Bool
-    val CLKOUT1  = out Bool
-    val CLKOUT2  = out Bool
-    val CLKOUT3  = out Bool
-    val CLKOUT4  = out Bool
-    val CLKOUT5  = out Bool
-    val LOCKED   = out Bool
-    val PWRDWN   = in Bool
-    val RST      = in Bool
+    val CLKFBIN  = in Bool()
+    val CLKFBOUT = out Bool()
+    val CLKIN1   = in Bool()
+    val CLKOUT0  = out Bool()
+    val CLKOUT1  = out Bool()
+    val CLKOUT2  = out Bool()
+    val CLKOUT3  = out Bool()
+    val CLKOUT4  = out Bool()
+    val CLKOUT5  = out Bool()
+    val LOCKED   = out Bool()
+    val PWRDWN   = in Bool()
+    val RST      = in Bool()
   }
   noIoPrefix()
   setBlackBoxName("PLLE2_BASE")
@@ -122,8 +122,8 @@ extends BlackBox {
 
 class XilinxGlobalBuffer extends BlackBox {
   val io = new Bundle() {
-    val I = in Bool
-    val O = out Bool
+    val I = in Bool()
+    val O = out Bool()
   }
   noIoPrefix()
   setBlackBoxName("BUFG")
@@ -166,17 +166,17 @@ extends BlackBox {
   val io = new Bundle() {
     val dina           = in Bits (dataWidth bits)
     val addra          = in Bits (addrWidth bits)
-    val wea            = in Bits ((if (byteWrite) dataWidth / 8 else dataWidth) bits)
+    val wea            = in Bits ((if (byteWrite) dataWidth / 8 else 1) bits)
     val douta          = out Bits (dataWidth bits)
-    val clka           = in Bool
-    val rsta           = in Bool
-    val ena            = in Bool
-    val regcea         = in Bool
-    val injectsbiterra = in Bool
-    val sbiterra       = out Bool
-    val injectdbiterra = in Bool
-    val dbiterra       = out Bool
-    val sleep          = in Bool
+    val clka           = in Bool()
+    val rsta           = in Bool()
+    val ena            = in Bool()
+    val regcea         = in Bool()
+    val injectsbiterra = in Bool()
+    val sbiterra       = out Bool()
+    val injectdbiterra = in Bool()
+    val dbiterra       = out Bool()
+    val sleep          = in Bool()
   }
   noIoPrefix()
   setBlackBoxName("xpm_memory_spram")

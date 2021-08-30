@@ -59,16 +59,16 @@ extends PQVexRiscv(
   ibusRange = SizeMapping(0x80000000L, ramBlockSizes.reduce(_ + _))
 ) {
   val io = new Bundle {
-    val RST = in Bool
-    val CLK = in Bool
+    val RST = in Bool()
+    val CLK = in Bool()
     /* UART */
-    val TXD = out Bool // TXD
-    val RXD = in Bool  // RXD
+    val TXD = out Bool() // TXD
+    val RXD = in Bool()  // RXD
     /* JTAG */
-    val TDO = out Bool // TDO
-    val TCK = in Bool  // TCK
-    val TDI = in Bool  // TDI
-    val TMS = in Bool  // TMS
+    val TDO = out Bool() // TDO
+    val TCK = in Bool()  // TCK
+    val TDI = in Bool()  // TDI
+    val TMS = in Bool()  // TMS
   }
   noIoPrefix()
 

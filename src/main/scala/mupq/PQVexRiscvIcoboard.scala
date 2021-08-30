@@ -15,9 +15,9 @@ case class GenericSRAM(addrWidth: Int = 16, dataWidth: Int = 16) extends Bundle 
   val addr          = Bits(addrWidth bits)
   val dataOut       = Bits(dataWidth bits)
   val dataIn        = Bits(dataWidth bits)
-  val ce_n          = Bool /* ~ChipEnable */
-  val oe_n          = Bool /* ~OutputEnable */
-  val we_n          = Bool /* ~WriteEnable */
+  val ce_n          = Bool() /* ~ChipEnable */
+  val oe_n          = Bool() /* ~OutputEnable */
+  val we_n          = Bool() /* ~WriteEnable */
   val sel_n         = Bits(selWidth bits) /* ~Byte Control */
 
   override def asMaster(): Unit = {
@@ -30,7 +30,7 @@ class PipelinedMemoryBusSRAM(busConfig: PipelinedMemoryBusConfig) extends Compon
   require(busConfig.dataWidth == 32, "Only 32 bit busses supported")
   val io = new Bundle {
     val bus      = slave(PipelinedMemoryBus(busConfig))
-    val clk90deg = in Bool
+    val clk90deg = in Bool()
     val sram     = master(GenericSRAM(19, 16))
   }
 
@@ -105,28 +105,28 @@ extends PQVexRiscv(
 ) {
   val io = new Bundle {
 
-    val clk_100mhz = in Bool
+    val clk_100mhz = in Bool()
     // LED's
-    val led1 = out Bool
-    val led2 = out Bool
-    val led3 = out Bool
+    val led1 = out Bool()
+    val led2 = out Bool()
+    val led3 = out Bool()
     /* UART */
-    val pmod3_8 = out Bool // TXD
-    val pmod3_9 = in Bool  // RXD
+    val pmod3_8 = out Bool() // TXD
+    val pmod3_9 = in Bool()  // RXD
     /* JTAG */
-    val pmod4_1 = out Bool // TDO
-    val pmod4_3 = in Bool  // TCK
-    val pmod4_7 = in Bool  // TDI
-    val pmod4_8 = in Bool  // TMS
+    val pmod4_1 = out Bool() // TDO
+    val pmod4_3 = in Bool()  // TCK
+    val pmod4_7 = in Bool()  // TDI
+    val pmod4_8 = in Bool()  // TMS
     /* SRAM */
     val sram_addr = out Bits (19 bits)
     // val sram_data = inout(Analog(Vec(Bool, 16)))
     val sram_data = master(TriStateArray(16 bits))
-    val sram_ce_n = out Bool
-    val sram_oe_n = out Bool
-    val sram_we_n = out Bool
-    val sram_lb_n = out Bool
-    val sram_ub_n = out Bool
+    val sram_ce_n = out Bool()
+    val sram_oe_n = out Bool()
+    val sram_we_n = out Bool()
+    val sram_lb_n = out Bool()
+    val sram_ub_n = out Bool()
   }
   /* Remove io_ prefix from generated Verilog */
   noIoPrefix()
@@ -137,8 +137,8 @@ extends PQVexRiscv(
   pll.io.BYPASS := False
   pll.io.RESETB := True
 
-  val clk_20mhz       = Bool
-  val clk_20mhz_90deg = Bool
+  val clk_20mhz       = Bool()
+  val clk_20mhz_90deg = Bool()
   clk_20mhz := pll.io.PLLOUTGLOBALA
   clk_20mhz_90deg := pll.io.PLLOUTGLOBALB
 

@@ -57,15 +57,15 @@ extends PQVexRiscv(
   ibusRange = SizeMapping(0x80000000L, 128 KiB)
 ) {
   val io = new Bundle {
-    val ice_clk = in Bool
+    val ice_clk = in Bool()
     /* UART */
-    val iob_8a = out Bool // TXD
-    val iob_9b = in Bool  // RXD
+    val iob_8a = out Bool() // TXD
+    val iob_9b = in Bool()  // RXD
     /* JTAG */
-    val iob_23b    = out Bool // TDO
-    val iob_25b_g3 = in Bool  // TCK
-    val iob_24a    = in Bool  // TDI
-    val iob_29b    = in Bool  // TMS
+    val iob_23b    = out Bool() // TDO
+    val iob_25b_g3 = in Bool()  // TCK
+    val iob_24a    = in Bool()  // TDI
+    val iob_29b    = in Bool()  // TMS
   }
   asyncReset := False
   mainClock := io.ice_clk
