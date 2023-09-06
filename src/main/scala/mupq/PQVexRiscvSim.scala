@@ -155,6 +155,7 @@ object PQVexRiscvSim {
 
       val uartTxd = dut.io.uart.txd
       val uartRxd = dut.io.uart.rxd
+      uartRxd #= true
 
       val uartDecoder = fork {
         sleep(1)
