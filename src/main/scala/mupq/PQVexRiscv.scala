@@ -88,6 +88,7 @@ extends Component {
       case plugin: CsrPlugin =>
         plugin.externalInterrupt := externalInterrupt
         plugin.timerInterrupt := timerInterrupt
+        plugin.softwareInterrupt := False
       case plugin: DebugPlugin =>
         plugin.debugClockDomain {
           resetCtrl.systemClockReset setWhen (RegNext(plugin.io.resetOut))
@@ -121,7 +122,7 @@ extends Component {
           addressWidth = 20,
           dataWidth = 32
         ),
-        pipelineBridge = false,
+        pipelineBridge = true,
         pipelinedMemoryBusConfig = busConfig
       )
 
@@ -150,8 +151,8 @@ extends Component {
             parity = UartParityType.NONE,
             stop = UartStopType.ONE
           ),
-          busCanWriteClockDividerConfig = false,
-          busCanWriteFrameConfig = false,
+          busCanWriteClockDividerConfig = true,
+          busCanWriteFrameConfig = true,
           txFifoDepth = 16,
           rxFifoDepth = 16
         )
