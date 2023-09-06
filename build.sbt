@@ -19,7 +19,7 @@ lazy val pqvexriscv = (project in file("."))
   ).dependsOn(vexRiscv)
 
 // Newer versions of VexRiscv bring a new debugger, that requires more refactoring
-lazy val vexRiscv = RootProject(uri("git://github.com/SpinalHDL/VexRiscv#b29eb542f278edb8ee2c91863a5b26e76b5932c9"))
+lazy val vexRiscv = RootProject(uri("https://github.com/SpinalHDL/VexRiscv.git#b29eb542f278edb8ee2c91863a5b26e76b5932c9"))
 
 fork := true
 
