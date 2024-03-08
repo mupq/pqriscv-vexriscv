@@ -9,6 +9,7 @@ lazy val pqvexriscv = (project in file("."))
   .settings(
     name := "pqvexriscv",
     version := "0.1",
+    envVars := Map("SPINAL_VERILATOR_FLAGS" -> "-CFLAGS --std=c++14"),
     libraryDependencies ++= Seq(
       "net.java.dev.jna" % "jna" % "5.14.0",
       "org.scalatest" %% "scalatest" % "3.2.5" % "test", // Same version as VexRiscv uses...
