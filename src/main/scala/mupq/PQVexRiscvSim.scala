@@ -16,7 +16,7 @@ import spinal.lib.bus.misc.SizeMapping
 import spinal.lib.io.TriStateArray
 import spinal.lib.com.jtag.Jtag
 import spinal.lib.com.uart.Uart
-import spinal.lib.com.jtag.sim.JtagTcp
+import spinal.lib.com.jtag.sim.JtagVpi
 
 import vexriscv.VexRiscv
 import vexriscv.plugin.Plugin
@@ -138,20 +138,22 @@ object PQVexRiscvSim {
     }
 
     compiled.doSim("PqVexRiscvSim", 42) { dut =>
-      val mainClkPeriod  = (1e12 / dut.coreFrequency.toDouble).toLong
-      val jtagClkPeriod  = mainClkPeriod * 4
-      val uartBaudRate   = 115200
-      val uartBaudPeriod = (1e12 / uartBaudRate.toDouble).toLong
+      val uartBaudRate   = 115200 Hz
+      val uartBaudPeriod = uartBaudRate.toTime
 
       val clockDomain = ClockDomain(dut.io.mainClock, dut.io.asyncReset)
-      clockDomain.forkStimulus(mainClkPeriod)
+      clockDomain.forkStimulus(dut.coreFrequency.toTime)
 
-      val tcpJtag = JtagTcp(
-        jtag = dut.io.jtag,
-        jtagClkPeriod = jtagClkPeriod
+      // val tcpJtag = JtagTcp(
+      //   jtag = dut.io.jtag,
+      //   jtagClkPeriod = jtagClkPeriod
+      // )
+
+      // println(s"Simulating ${dut.getClass.getName} with JtagTcp on port 7894")
+      val jtagVpi = JtagVpi(
+        dut.io.jtag,
+        jtagClkPeriod = (dut.coreFrequency / 4).toTime
       )
-
-      println(s"Simulating ${dut.getClass.getName} with JtagTcp on port 7894")
 
       val uartTxd = dut.io.uart.txd
       val uartRxd = dut.io.uart.rxd
@@ -218,7 +220,7 @@ object PQVexRiscvSim {
       var running = true
 
       while (running) {
-        sleep(mainClkPeriod * 50000)
+        sleep(dut.coreFrequency.toTime * 1000000)
       }
     }
   }

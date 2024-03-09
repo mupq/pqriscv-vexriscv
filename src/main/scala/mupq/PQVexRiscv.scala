@@ -7,6 +7,7 @@ import spinal.lib._
 import spinal.lib.bus.amba3.apb._
 import spinal.lib.bus.misc._
 import spinal.lib.bus.simple._
+import spinal.lib.cpu.riscv.debug._
 import spinal.lib.io._
 import spinal.lib.com.jtag._
 import spinal.lib.com.uart._
@@ -69,7 +70,21 @@ extends Component {
     val timerInterrupt    = False
     val externalInterrupt = False
 
-    val config = VexRiscvConfig(plugins = cpuPlugins() ++ Seq(new DebugPlugin(debugClockDomain, 3)))
+    val plugins = cpuPlugins()
+    val config = VexRiscvConfig(plugins = plugins
+                                  ++ Seq(
+                                    new EmbeddedRiscvJtag(
+                                      DebugTransportModuleParameter(
+                                        addressWidth = 7,
+                                        version = 1,
+                                        idle = 7
+                                      ),
+                                      debugCd = debugClockDomain,
+                                      withTap = true,
+                                      withTunneling = false
+                                    )
+                                  )
+    )
 
     val cpu = new VexRiscv(config)
     /* Wire the Busses / Lines to the plugins */
@@ -94,6 +109,8 @@ extends Component {
           resetCtrl.systemClockReset setWhen (RegNext(plugin.io.resetOut))
           jtag = plugin.io.bus.fromJtag()
         }
+      case plugin: EmbeddedRiscvJtag =>
+          jtag = plugin.jtag
       case _ =>
     }
 
@@ -220,10 +237,12 @@ object PQVexRiscv {
         CsrPluginConfig
           .smallest(0x80000000L)
           .copy(
+            withPrivilegedDebug = true,
             mtvecAccess = CsrAccess.READ_WRITE,
             mcycleAccess = CsrAccess.READ_ONLY,
             minstretAccess = CsrAccess.READ_ONLY
           )
+          
       ),
       new DecoderSimplePlugin(
         catchIllegalInstruction = false
